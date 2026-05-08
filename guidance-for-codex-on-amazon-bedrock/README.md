@@ -1,31 +1,98 @@
 # Guidance for Codex on Amazon Bedrock
 
-Enterprise deployment patterns for [Codex](https://openai.com/codex) running
-against [Amazon Bedrock](https://aws.amazon.com/bedrock/) (OpenAI models:
-`openai.gpt-5.4`, `openai.gpt-oss-*`). Two patterns, in recommended order:
-pick the first your org can actually run.
+Run [OpenAI Codex](https://openai.com/codex) against [Amazon Bedrock](https://aws.amazon.com/bedrock/)
+(`openai.gpt-5.4`, `openai.gpt-oss-*`) with enterprise-grade identity, cost
+attribution, and observability — without standing up any custom auth service.
 
-> **Decision rule:** If you can run IAM Identity Center, use IAM Identity
-> Center. If you can't and you need centralized enforcement or multi-provider
-> fan-out, run the Gateway.
+**Who this is for:** AWS administrators and technical decision-makers
+evaluating how to roll Codex out to developers at company scale.
 
-## Deployment paths
+**What you get:**
+- Per-developer SSO sign-in (no shared keys, no static credentials).
+- Per-user cost attribution in CloudTrail + Cost and Usage Reports.
+- Optional CloudWatch usage dashboard (tokens, latency, spend by user).
+- A signed, MDM-friendly developer bundle — install, `aws sso login`, done.
 
-| | **IAM Identity Center** (recommended) | **Gateway** (alternative) |
+---
+
+## Pick your path in 60 seconds
+
+> **Decision rule:** If you can run IAM Identity Center, use IAM Identity Center.
+> If you can't — or you need hard per-user budgets or multi-provider routing —
+> run the Gateway.
+
+| | **IAM Identity Center** _(recommended)_ | **Gateway** _(alternative)_ |
 |---|---|---|
-| Developer setup | `aws sso login` via AWS CLI v2 | OIDC JWT + `OPENAI_BASE_URL` |
-| Binary distribution | Signed AWS CLI v2 (winget/MSI/brew/MDM) | None |
-| Infra to run | None (free AWS control plane) | ECS Fargate + ALB + Postgres |
-| Bedrock auth | Per-user federated IAM | Gateway IAM task role |
-| Per-user attribution | CloudTrail `userIdentity` | JWT claims via OTel |
-| Hard per-user budgets | No | Yes |
+| Best for | Any org already using IdC / AWS SSO | Orgs that need hard budgets or multi-LLM routing |
+| Dev setup | `aws sso login` | OIDC JWT + `OPENAI_BASE_URL` |
+| Infra to run | **None** (free AWS control plane) | ECS Fargate + ALB + Postgres |
+| Bedrock auth | Per-user federated IAM | Shared gateway task role |
+| Per-user attribution | CloudTrail `userIdentity` (native) | JWT claim → OTel header |
+| Hard per-user budgets | No (soft via quotas) | Yes |
 | Codex provider | Native `amazon-bedrock` | Generic `openai` |
+| Time to first call | ~5 min + dev SSO sign-in | ~15 min + gateway bring-up |
 
-Full comparison + prereq checklists: **[docs/01-decide.md](docs/01-decide.md)**.
+Full prereq checklists and comparison: **[docs/01-decide.md](docs/01-decide.md)**.
 
-## Identity chain
+---
 
-The invariant every path preserves: the SSO user identity flows end-to-end.
+## Quick start — IAM Identity Center path
+
+### 1. Deploy the Bedrock auth stack (admin, once)
+
+```bash
+aws cloudformation deploy \
+  --stack-name codex-bedrock-idc \
+  --template-file deployment/infrastructure/bedrock-auth-idc.yaml \
+  --capabilities CAPABILITY_NAMED_IAM \
+  --region us-west-2
+```
+
+Creates a customer-managed Bedrock policy + an IAM role trusted by
+`sso.amazonaws.com` and scoped to `AWSReservedSSO_CodexBedrockUser_*` sessions.
+
+### 2. Wire it to a permission set (admin, once)
+
+In IAM Identity Center, create a permission set named `CodexBedrockUser`,
+attach the customer-managed policy from step 1, and assign it to your Codex
+developer group.
+
+### 3. Generate the developer bundle (admin)
+
+```bash
+deployment/scripts/generate-codex-sso-config.sh \
+  --start-url https://d-xxxxxxxxxx.awsapps.com/start \
+  --sso-region us-east-1 \
+  --account-id 123456789012 \
+  --permission-set CodexBedrockUser \
+  --bedrock-region us-west-2 \
+  --profile-name codex \
+  --outdir ./dist/codex-sso
+```
+
+Distribute `./dist/codex-sso/` via zip + S3 presigned URL, MDM, or your
+package manager of choice.
+
+### 4. Install on developer machines
+
+```bash
+./install.sh                      # writes fenced managed blocks to
+                                  # ~/.aws/config and ~/.codex/config.toml
+aws sso login --profile codex
+codex                             # uses native amazon-bedrock provider
+```
+
+`./uninstall.sh` cleanly removes every change on request.
+
+Full walkthrough (validation, OTel add-on, failure modes, teardown):
+**[docs/deploy-identity-center.md](docs/deploy-identity-center.md)**.
+
+---
+
+## How identity flows end-to-end
+
+The invariant every path preserves: **the SSO user identity reaches
+CloudTrail and CUR**, so cost and audit queries are per-developer by default.
 
 ```
 Corporate IdP  ──(SAML+SCIM)──▶  AWS IAM Identity Center
@@ -45,102 +112,52 @@ Corporate IdP  ──(SAML+SCIM)──▶  AWS IAM Identity Center
               CUR (cost)
 ```
 
-## Start here
+---
 
-1. **[Decide](docs/01-decide.md)** — three-path comparison; pick your path in
-   ≤10 minutes.
-2. **Deploy** — one canonical doc per path.
-   - [IAM Identity Center](docs/deploy-identity-center.md) — **ready**.
-   - [Gateway](docs/deploy-gateway.md) — **ready**.
-3. **Operate**
-   - [Monitoring + cost attribution](docs/operate-monitoring.md)
-   - [Troubleshooting](docs/operate-troubleshooting.md)
-   - [Region / model matrix](docs/reference-regions.md)
+## Supported models
 
-## The short version (IAM Identity Center)
+| Model ID | Notes |
+|---|---|
+| `openai.gpt-5.4` | **Recommended default.** Served via Bedrock Mantle. |
+| `openai.gpt-oss-120b` | GPT-OSS 120B (Converse-compatible). |
+| `openai.gpt-oss-20b` | GPT-OSS 20B (Converse-compatible). |
 
-### Admin
+Available in `us-east-1`, `us-east-2`, `us-west-2`. Full region × model
+matrix: **[docs/reference-regions.md](docs/reference-regions.md)**.
 
-```bash
-# 1. Deploy the Bedrock auth stack
-aws cloudformation deploy \
-  --stack-name codex-bedrock-idc \
-  --template-file deployment/infrastructure/bedrock-auth-idc.yaml \
-  --capabilities CAPABILITY_NAMED_IAM \
-  --region us-west-2
+---
 
-# 2. Create a CodexBedrockUser permission set in IdC; attach the
-#    customer-managed policy from the stack; assign to your Codex group.
+## Documentation map
 
-# 3. Generate the developer bundle
-deployment/scripts/generate-codex-sso-config.sh \
-  --start-url https://d-xxxxxxxxxx.awsapps.com/start \
-  --sso-region us-east-1 \
-  --account-id 123456789012 \
-  --permission-set CodexBedrockUser \
-  --bedrock-region us-west-2 \
-  --profile-name codex \
-  --outdir ./dist/codex-sso
-```
+| If you want to… | Read |
+|---|---|
+| Choose a deployment path | [docs/01-decide.md](docs/01-decide.md) |
+| Deploy the recommended path | [docs/deploy-identity-center.md](docs/deploy-identity-center.md) |
+| Deploy the gateway alternative | [docs/deploy-gateway.md](docs/deploy-gateway.md) |
+| Set up monitoring + cost attribution | [docs/operate-monitoring.md](docs/operate-monitoring.md) |
+| Diagnose a failure | [docs/operate-troubleshooting.md](docs/operate-troubleshooting.md) |
+| Check region / model support | [docs/reference-regions.md](docs/reference-regions.md) |
 
-Distribute `./dist/codex-sso/` (zip + S3 presigned URL, MDM payload, etc.).
-
-### Developer
-
-```bash
-./install.sh                      # writes fenced managed blocks to
-                                  # ~/.aws/config and ~/.codex/config.toml
-aws sso login --profile codex
-codex                             # native amazon-bedrock provider
-```
-
-See **[deploy-identity-center.md](docs/deploy-identity-center.md)** for the
-full walkthrough (validation, CloudTrail attribution, optional OTel, teardown).
-
-## What's in this repo
+## Repo layout
 
 ```
 guidance-for-codex-on-amazon-bedrock/
 ├── README.md                              ← you are here
-├── docs/
-│   ├── 01-decide.md                       ← two-path comparison + prereqs
-│   ├── deploy-identity-center.md          ← canonical IdC deployment
-│   ├── deploy-gateway.md                  ← canonical Gateway deployment
-│   ├── operate-monitoring.md              ← monitoring + cost attribution
-│   ├── operate-troubleshooting.md         ← cross-path failure modes
-│   └── reference-regions.md               ← region / model matrix
+├── docs/                                  ← decide / deploy / operate / reference
 ├── deployment/
-│   ├── infrastructure/
+│   ├── infrastructure/                    ← CloudFormation templates
 │   │   ├── bedrock-auth-idc.yaml          ← IdC Bedrock policy + role
-│   │   ├── networking.yaml                ← VPC for optional OTel stack
+│   │   ├── networking.yaml                ← VPC for the OTel stack
 │   │   ├── otel-collector.yaml            ← ECS Fargate OTel collector
 │   │   └── codex-otel-dashboard.yaml      ← CloudWatch usage dashboard
-│   ├── litellm/                           ← LiteLLM gateway (alternative)
+│   ├── litellm/                           ← LiteLLM gateway reference impl
 │   └── scripts/
-│       ├── generate-codex-sso-config.sh   ← admin-side distributable generator
-│       └── deploy-otel-stack.sh           ← OTel stack one-shot deploy
+│       ├── generate-codex-sso-config.sh   ← dev-bundle generator
+│       └── deploy-otel-stack.sh           ← OTel one-shot deploy
 └── assets/images/                         ← architecture + dashboard images
 ```
 
-## Bedrock models
-
-Currently supported (as of 2026-05-08):
-
-| Model ID | Notes |
-|---|---|
-| `openai.gpt-5.4` | **Recommended default.** Routes through Bedrock Mantle. |
-| `openai.gpt-oss-120b` | GPT-OSS 120B (Converse-compatible). |
-| `openai.gpt-oss-20b` | GPT-OSS 20B (Converse-compatible). |
-
-OpenAI models on Bedrock are available in US regions (`us-east-1`,
-`us-east-2`, `us-west-2`). See `docs/reference-regions.md` for the full
-matrix.
-
-## Status
-
-Migration from the prior single-path layout is in progress. IdC path is
-end-to-end validated (time-to-first-successful-Bedrock-call: 275s on Mac,
-2026-05-08). Gateway path infra + doc are complete.
+---
 
 ## License
 
