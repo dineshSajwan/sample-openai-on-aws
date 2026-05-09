@@ -7,7 +7,7 @@ Guided wizard for all four deployment shapes this guidance supports:
 | **IAM Identity Center** (recommended) | Creates the Bedrock role + policy stack and generates the developer bundle. | Assumes the role + permission set already exist; generates the developer bundle only. |
 | **LiteLLM Gateway** (alternative) | Creates networking + OTel collector + LiteLLM gateway stacks and generates a bundle pointing at the new ALB. | Points at a gateway you already run (LiteLLM, Portkey, Kong AI, custom); generates a bundle pointing at that URL. |
 
-IdC uses SigV4 over AWS SSO; Gateway uses bearer-key over HTTPS. Pick by the criteria in [docs/01-decide.md](docs/01-decide.md).
+IdC uses SigV4 over AWS SSO; Gateway uses a bearer key over HTTPS. Choose based on the criteria in [docs/01-decide.md](docs/01-decide.md).
 
 ## Install
 
@@ -17,7 +17,7 @@ poetry install
 poetry run cxwb --help
 ```
 
-Prereqs: Python 3.10–3.13, [Poetry](https://python-poetry.org/), AWS CLI v2 authenticated to an account with the right perms, and Bedrock activated in your target region.
+Prerequisites: Python 3.10–3.13, [Poetry](https://python-poetry.org/), AWS CLI v2 authenticated to an account with the required permissions, and Bedrock activated in your target region.
 
 ## Flow
 
@@ -29,7 +29,7 @@ poetry run cxwb distribute --profile <n> --bucket my-bucket    # one bundle per 
 poetry run cxwb destroy --profile <n> # tear it all down
 ```
 
-Profiles save to `~/.cxwb/profiles/<name>.json` — plain JSON, safe to inspect or hand-edit.
+Profiles are saved to `~/.cxwb/profiles/<name>.json` as plain JSON, safe to inspect or edit manually.
 
 ## `cxwb init` prompts
 
@@ -50,9 +50,9 @@ Profiles save to `~/.cxwb/profiles/<name>.json` — plain JSON, safe to inspect 
 
 ### IAM Identity Center — existing (BYO)
 
-For orgs that already run IdC with a Bedrock-invoke role trusted by `sso.amazonaws.com`, attached to a permission set. `cxwb` skips the stack and just generates the bundle.
+For organizations that already run IdC with a Bedrock-invoke role trusted by `sso.amazonaws.com` and attached to a permission set. `cxwb` skips the stack and generates only the bundle.
 
-Prompts: same as above minus the stack name. `cxwb deploy` is a no-op. `cxwb distribute` produces the developer bundle.
+Prompts: the same as above without the stack name. `cxwb deploy` is a no-op. `cxwb distribute` produces the developer bundle.
 
 ### LiteLLM Gateway path — deploy new
 
@@ -65,11 +65,11 @@ Prompts: same as above minus the stack name. `cxwb deploy` is a no-op. `cxwb dis
 7. Default model alias.
 8. Profile name.
 
-`cxwb deploy` creates networking → OTel collector → LiteLLM gateway in order. `cxwb distribute` generates one bundle for the deployment that points developers at the gateway URL and the self-service key endpoint (LiteLLM SSO `/sso/key/generate` or equivalent). Developers mint their own keys at install time — bundles never contain credentials.
+`cxwb deploy` creates networking → OTel collector → LiteLLM gateway in order. `cxwb distribute` generates one bundle for the deployment that directs developers to the gateway URL and the self-service key endpoint (LiteLLM SSO `/sso/key/generate` or equivalent). Developers generate their own keys at install time — bundles never contain credentials.
 
 ### Existing gateway (BYO)
 
-Use this when a gateway already runs — LiteLLM, Portkey, Kong AI, Helicone, or a custom shim.
+Use this when a gateway is already running — LiteLLM, Portkey, Kong AI, Helicone, or a custom shim.
 
 1. Gateway base URL (e.g. `https://gw.example.com/v1`).
 2. Self-service key endpoint (optional).
@@ -90,7 +90,7 @@ It intentionally does not:
 - Build signed installers or per-platform binaries.
 - Deploy a Cognito user pool or an authenticated landing page.
 - Manage Windows CodeBuild.
-- Mint or rotate per-user gateway keys (developers self-serve via the gateway's SSO endpoint).
+- Generate or rotate per-user gateway keys (developers self-serve via the gateway's SSO endpoint).
 - Manage LiteLLM per-user budgets.
 
-For anything beyond the happy path, drop to the manual docs: [docs/deploy-identity-center.md](docs/deploy-identity-center.md) and [docs/deploy-gateway.md](docs/deploy-gateway.md). The wizard and the manual path deploy the same templates.
+For anything beyond the standard path, refer to the manual docs: [docs/deploy-identity-center.md](docs/deploy-identity-center.md) and [docs/deploy-gateway.md](docs/deploy-gateway.md). The wizard and the manual path deploy the same templates.

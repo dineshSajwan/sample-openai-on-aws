@@ -1,6 +1,6 @@
 # Operate — Monitoring & Cost Attribution
 
-How to see who's using Codex, what they're spending, and when to alert.
+How to see who is using Codex, what they are spending, and when to alert.
 
 Both deploy paths (IdC and Gateway) end in a user-scoped IAM session invoking
 Bedrock. That single identity fans out into two authoritative signals —
@@ -35,12 +35,12 @@ This diagram is the canonical version. Other docs link here; do not copy.
 
 | Layer | Purpose | Latency | Storage | Authority |
 |---|---|---|---|---|
-| **Live dashboards + quota alerts** | "What's happening now. Who's over budget." | ~60s | CloudWatch Metrics + Logs | Usage only |
-| **Cost attribution** | "What did each user / team cost this month." | ~24h | CUR 2.0 on S3 | Billing-grade |
+| **Live dashboards + quota alerts** | "What is happening now. Who is over budget." | ~60s | CloudWatch Metrics + Logs | Usage only |
+| **Cost attribution** | "What each user or team cost this month." | ~24h | CUR 2.0 on S3 | Billing-grade |
 | **Deep historical analytics** (optional) | Arbitrary SQL over months of token-level data. | ~5min | S3 Parquet + Athena | Usage only |
 
-Pick the layers you need. Most orgs run **live + cost**; only add the
-analytics pipeline when CUR can't answer the question (per-turn token
+Select the layers you need. Most organizations run **live + cost**; add the
+analytics pipeline only when CUR cannot answer the question (per-turn token
 counts, TPM/RPM spikes, session-duration studies).
 
 ---
@@ -59,8 +59,8 @@ counts, TPM/RPM spikes, session-duration studies).
   mix, active-developer leaderboard.
 
 End users emit metrics automatically once their generated `~/.codex/config.toml`
-ships with an `[otel]` block pointing at your collector (the generator bakes
-this in — see `deploy-identity-center.md` §5).
+ships with an `[otel]` block pointing at your collector (the generator embeds
+this — see `deploy-identity-center.md` §5).
 
 ### Metrics Codex actually emits
 
@@ -73,29 +73,29 @@ Metrics emitted by Codex ≥ 0.130:
 - `codex.thread.started`, `codex.thread.skills.*`.
 - `codex.shell_snapshot(.duration_ms)`, `codex.startup_prewarm.*`, `codex.plugins.startup_sync(.final)`, `codex.conversation.turn.count`.
 
-Codex auto-stamps resource attrs: `service.name=codex_cli_rs`, `service.version`,
+Codex automatically stamps resource attributes: `service.name=codex_cli_rs`, `service.version`,
 `app.version`, `model`, `originator`, `session_source`, `os`. These become
 additional CloudWatch dimensions.
 
 ### Spend estimates on the live dashboard
 
-The dashboard multiplies `codex.turn.token_usage` by list price per 1M tokens
+The dashboard multiplies `codex.turn.token_usage` by the list price per 1M tokens
 (defaults in `codex-otel-dashboard.yaml` — placeholder figures until GPT-5.4
-pricing ships). **These are estimates.** Ground truth is CUR (Layer 2). If
+pricing is published). **These are estimates.** The ground truth is CUR (Layer 2). If
 numbers disagree, trust CUR.
 
 ### Quota alerts
 
-Under IdC there is **no credential issuer to gate**: IdC hands out session
-credentials directly, and you can't revoke them mid-session on token overage.
+Under IdC there is **no credential issuer to gate**: IdC issues session
+credentials directly, and you cannot revoke them mid-session on token overage.
 
 Recommended posture under IdC:
 
 - **Soft alerts via CloudWatch alarms** on `codex.turn.token_usage` summed by
-  `user.id` over a rolling window. Wire to SNS for email / Slack.
+  `user.id` over a rolling window. Route to SNS for email or Slack.
 - **Hard enforcement, if required, via the Gateway path.** LiteLLM's
-  per-user/per-key budget controls sit in the request path and can actually
-  deny.
+  per-user and per-key budget controls sit in the request path and can actively
+  deny requests.
 
 ---
 
@@ -130,26 +130,26 @@ GROUP BY 1 ORDER BY usd DESC;
 ```
 
 Cost Explorer does **not** expose `line_item_iam_principal` as a
-filter/grouping dimension — you need Athena or QuickSight. If you want per-user
+filter or grouping dimension — you need Athena or QuickSight. If you want per-user
 visibility *in Cost Explorer*, add session tags (next section).
 
 ### Per-team: IAM principal tags
 
-All IdC users share the same role, so role-level tags give team/department
+All IdC users share the same role, so role-level tags provide team or department
 rollups only — not per-user.
 
 1. Tag the `CodexBedrockUser` role (or its permission-set-backed role) with
    `department`, `cost-center`, etc.
 2. Billing → **Cost Allocation Tags** → filter by **IAM principal type**,
    select, **Activate**.
-3. Tags take up to 24h to appear after the first tagged call, then up to 24h
+3. Tags take up to 24 hours to appear after the first tagged call, then up to 24 hours
    more to activate.
 
 ### Session tags for per-user Cost Explorer visibility
 
 Optional. Needed only if you want per-user grouping in Cost Explorer (not just
 Athena). Embed an `https://aws.amazon.com/tags` claim in the IdP's ID token —
-formats vary per IdP (Auth0 nested object; Okta/Entra flattened per-key).
+formats vary by IdP (Auth0 uses a nested object; Okta and Entra use flattened per-key).
 See the [AWS STS session-tags guide](https://docs.aws.amazon.com/IAM/latest/UserGuide/id_session-tags.html)
 for claim formats per IdP — this is an IdP-side customization, not
 Codex-specific.
@@ -161,7 +161,7 @@ The role's trust policy must allow `sts:TagSession` or
 
 ## Layer 3 — Deep historical analytics (optional)
 
-When CUR and live dashboards don't answer the question — typically token-level
+When CUR and live dashboards do not answer the question — typically token-level
 studies, TPM/RPM spike analysis, or multi-month session correlation — enable
 the analytics pipeline:
 
@@ -170,9 +170,9 @@ the analytics pipeline:
 - **Athena** with partition projection (no Glue crawler) queries the lake.
 - **S3 lifecycle** transitions to Glacier after 90 days.
 
-Cost: Firehose + S3 + Athena scans. For most orgs, CUR + live dashboards
-suffice; enable this pipeline only when you have a real query that needs it.
-A CloudFormation template for this pipeline is not shipped in this repo —
+Cost: Firehose, S3, and Athena scans. For most organizations, CUR and live dashboards
+suffice; enable this pipeline only when you have a specific query that requires it.
+A CloudFormation template for this pipeline is not shipped in this repository —
 build it when the need is concrete.
 
 ---
@@ -186,9 +186,9 @@ If you run the LiteLLM Gateway (Path 2), the identity chain splits:
 - **Cost attribution** moves into the gateway's spend logs (LiteLLM's
   Postgres tables, keyed by the JWT subject). Export to Prometheus or
   Athena-over-S3 for durable reporting.
-- **Usage (OTel)** works the same as IdC — Codex still emits, the collector
-  still tags `user.id` from the header. But now you're maintaining two
-  attribution planes (gateway spend DB + OTel) that need to be joined by
+- **Usage (OTel)** works the same as IdC — Codex still emits, and the collector
+  still tags `user.id` from the header. However, you are now maintaining two
+  attribution planes (gateway spend database and OTel) that must be joined by
   username in whatever BI layer you use.
 
 This is the principal operational cost of choosing the Gateway path. See
@@ -214,5 +214,5 @@ After deploying the OTel stack and generating developer configs:
    `line_item_iam_principal` in your CUR 2.0 export should contain the
    same SSO email.
 
-Steps 1–3 are seconds-to-minutes. Step 4 is the CUR latency — plan on a day
-before per-user spend shows up in Athena.
+Steps 1–3 take seconds to minutes. Step 4 is the CUR latency — expect up to a day
+before per-user spend appears in Athena.

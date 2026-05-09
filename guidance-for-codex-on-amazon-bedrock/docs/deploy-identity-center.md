@@ -17,10 +17,10 @@ resulting profile through the standard AWS SDK credential chain.
 
 ### 1. Enable IdC in the AWS management account
 
-Region-pin the IdC instance — it is single-region, though permission sets can
+Pin the IdC instance to a region — it is single-region, though permission sets can
 grant access to Bedrock in any region.
 
-### 2. Wire your IdP as the identity source
+### 2. Connect your IdP as the identity source
 
 EntraID and Okta have first-class gallery apps with AWS-published setup guides.
 Exchange SAML metadata, then enable SCIM automatic provisioning using the
@@ -46,7 +46,7 @@ set in the next step.
 ### 4. Create the `CodexBedrockUser` permission set
 
 Replace `<idc-instance-arn>`, `<account-id>`, `<group-id>`, and the policy name
-with your values. Session duration defaults to 8h; raise up to 12h (`PT12H`)
+with your values. Session duration defaults to 8 hours; raise it up to 12 hours (`PT12H`)
 for long Codex sessions.
 
 ```bash
@@ -95,15 +95,15 @@ deployment/scripts/generate-codex-sso-config.sh \
   --outdir ./dist/codex-sso
 ```
 
-`--otel-endpoint` is optional; omit it if you're not running the OTel stack.
-The bundle is self-contained — zip `./dist/codex-sso/` and distribute via
-whatever channel your org already uses (MDM, internal package repo, shared
+`--otel-endpoint` is optional; omit it if you are not running the OTel stack.
+The bundle is self-contained — zip `./dist/codex-sso/` and distribute it through
+whatever channel your organization already uses (MDM, internal package repository, shared
 drive, etc.).
 
 #### Optional: presigned S3 URL distribution
 
-For orgs without an MDM or package-repo story, S3 presigned URLs are a cheap
-drop-in. Upload the zipped bundle to a private S3 bucket and share a
+For organizations without an MDM or package-repository solution, S3 presigned URLs
+are a low-cost alternative. Upload the zipped bundle to a private S3 bucket and share a
 time-limited URL:
 
 ```bash
@@ -113,9 +113,9 @@ aws s3 presign s3://<your-bundle-bucket>/codex-sso.zip --expires-in 604800
 ```
 
 Share the URL via Slack, email, or ticket. Rotate by re-running the generator
-and re-uploading — previous URLs expire on their own. Keep the bucket private;
-the presigned URL is the only grant. Suitable for small teams; for scaled
-rollout prefer MDM.
+and re-uploading — previous URLs expire automatically. Keep the bucket private;
+the presigned URL is the only grant. Suitable for small teams; for larger
+rollouts, prefer MDM.
 
 ## End-user flow
 
@@ -124,13 +124,13 @@ Documented in the bundle's `DEV-SETUP.md`. The short version:
 ```bash
 ./install.sh           # writes fenced managed blocks to ~/.aws/config and ~/.codex/config.toml
 aws sso login --profile codex
-codex                  # AWS_PROFILE is picked up via the [model_providers.amazon-bedrock.aws] block
+codex                  # AWS_PROFILE is resolved via the [model_providers.amazon-bedrock.aws] block
 ```
 
-The `codex-sso-creds` helper (installed to `~/.local/bin`) is wired in as the
-profile's `credential_process`. It auto-launches `aws sso login` when the
-cached SSO token is missing or expired, so users see a browser pop once per
-working day and nothing else.
+The `codex-sso-creds` helper (installed to `~/.local/bin`) is configured as the
+profile's `credential_process`. It automatically launches `aws sso login` when the
+cached SSO token is missing or expired, so users see a browser prompt once per
+working day and nothing more.
 
 ### Headless / remote hosts (no local browser)
 
@@ -146,9 +146,9 @@ aws sso login --profile codex --no-browser
 # returns once the cache is populated.
 ```
 
-The bundled helper auto-launches plain `aws sso login` on cache miss and will
+The bundled helper automatically launches plain `aws sso login` on a cache miss and will
 fail on headless hosts. Pre-warm with `--no-browser` before starting Codex;
-re-run when the 8h token expires. Fully non-interactive fleet/CI pre-warm is
+re-run when the 8-hour token expires. Fully non-interactive fleet/CI pre-warming is
 not yet supported.
 
 ### `aws login` (console-login) profiles
@@ -158,7 +158,7 @@ profiles (`login_session`) via the standard AWS SDK credential chain.
 
 ### Uninstall
 
-`./uninstall.sh` from the bundle strips the fenced blocks from
+`./uninstall.sh` from the bundle removes the fenced blocks from
 `~/.aws/config` and `~/.codex/config.toml`, removes the helper, and preserves
 timestamped backups.
 
@@ -178,7 +178,7 @@ aws bedrock-runtime converse \
 If this succeeds, the IdC → Bedrock auth chain is working. The Codex
 `amazon-bedrock` provider routes through a mantle endpoint; set the `model`
 line in the installed `~/.codex/config.toml` to a mantle-served model to
-round-trip from the Codex client — no auth or IAM changes needed.
+round-trip from the Codex client — no auth or IAM changes are needed.
 
 ## CloudTrail attribution
 
@@ -194,7 +194,7 @@ in CUR.
 
 ## Quota & budgets
 
-IdC gives you per-user *attribution*, not enforcement. What you can and can't
+IdC provides per-user *attribution*, not enforcement. What you can and cannot
 do on this path:
 
 | Want | Available | How |
@@ -209,7 +209,7 @@ per model); they throttle the whole account, not individual users.
 
 ## Optional: OTel usage dashboard
 
-Per-user usage attribution in CloudWatch. Order is: **deploy the collector
+Per-user usage attribution in CloudWatch. The order is: **deploy the collector
 stack first**, then pass its ALB endpoint into `generate-codex-sso-config.sh`
 via `--otel-endpoint` so each distributed `config.toml` has an `[otel]` block
 pointing at your collector. The collector
@@ -224,7 +224,7 @@ deployment/scripts/deploy-otel-stack.sh --region us-west-2
 
 The script deploys three stacks in order (`codex-otel-networking`,
 `codex-otel-collector`, `codex-otel-dashboard`) and prints the ALB endpoint.
-Full deploy runs ~5 minutes in a clean account.
+A full deployment takes approximately 5 minutes in a clean account.
 
 Useful flags:
 
@@ -237,9 +237,9 @@ Useful flags:
 
 ### 2. Harden the collector (opt-in — recommended before production use)
 
-Default posture is HTTP-only: the collector accepts any `x-user-id` value
+The default posture is HTTP-only: the collector accepts any `x-user-id` value
 (trust-on-distribution). For production, pass all five flags below together
-to enable HTTPS + ALB JWT validation:
+to enable HTTPS and ALB JWT validation:
 
 ```bash
 deployment/scripts/deploy-otel-stack.sh \
@@ -251,16 +251,16 @@ deployment/scripts/deploy-otel-stack.sh \
   --oidc-client-id <app-client-id>
 ```
 
-With JWT validation on, each developer also needs a bearer token — wire it
-into the generator with a static header (see `--otel-endpoint` usage in
+With JWT validation enabled, each developer also needs a bearer token — pass it
+into the generator as a static header (see `--otel-endpoint` usage in
 step 5 of Admin setup; per-user token distribution is out of scope for this
-doc).
+document).
 
 Trade-offs between the two postures are in `specs/02-otel-dashboard.md`.
 
-### 3. Wire the endpoint into the developer bundle
+### 3. Pass the endpoint into the developer bundle
 
-Feed the printed ALB endpoint into `generate-codex-sso-config.sh`:
+Provide the printed ALB endpoint to `generate-codex-sso-config.sh`:
 
 ```bash
 deployment/scripts/generate-codex-sso-config.sh \
@@ -268,17 +268,17 @@ deployment/scripts/generate-codex-sso-config.sh \
   --otel-endpoint https://otel.codex.example.com/v1/metrics
 ```
 
-`install.sh` in the bundle resolves the end-user's SSO identity at install
-time and bakes it into the `[otel]` block as a static `x-user-id` header;
+`install.sh` in the bundle resolves the end user's SSO identity at install
+time and embeds it into the `[otel]` block as a static `x-user-id` header;
 every metric carries that dimension.
 
-## Known gotchas
+## Known pitfalls
 
-- **Session duration.** 8h default can interrupt long Codex runs; raise up to
-  12h on the permission set, or accept `aws sso login` re-auth as UX.
+- **Session duration.** The 8-hour default can interrupt long Codex runs; raise it up to
+  12 hours on the permission set, or accept `aws sso login` re-authentication as UX.
 - **GovCloud.** IdC works in GovCloud but must be enabled separately; FedRAMP
   parity is an open question.
-- **Single-region IdC.** Control plane is regional; Bedrock calls can target
+- **Single-region IdC.** The control plane is regional; Bedrock calls can target
   any region the permission set allows.
 
 ## Teardown

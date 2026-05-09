@@ -2,23 +2,23 @@
 
 Run [OpenAI Codex](https://openai.com/codex) against [Amazon Bedrock](https://aws.amazon.com/bedrock/)
 (`openai.gpt-5.4`, `openai.gpt-oss-*`) with enterprise-grade identity, cost
-attribution, and observability — without standing up any custom auth service.
+attribution, and observability — without deploying any custom auth service.
 
 **Who this is for:** AWS administrators and technical decision-makers
-evaluating how to roll Codex out to developers at company scale.
+evaluating how to roll Codex out to developers at enterprise scale.
 
 **What you get:**
 - Per-developer SSO sign-in (no shared keys, no static credentials).
 - Per-user cost attribution in CloudTrail + Cost and Usage Reports.
 - Optional CloudWatch usage dashboard (tokens, latency, spend by user).
-- A signed, MDM-friendly developer bundle — install, `aws sso login`, done.
+- An MDM-friendly developer bundle — install, `aws sso login`, done.
 
 ---
 
 ## Pick your path in 60 seconds
 
 > **Decision rule:** If you can run IAM Identity Center, use IAM Identity Center.
-> If you can't — or you need hard per-user budgets — run the Gateway.
+> If you cannot — or you need hard per-user budgets — run the Gateway.
 
 | | **IAM Identity Center** _(recommended)_ | **Gateway** _(alternative)_ |
 |---|---|---|
@@ -27,9 +27,9 @@ evaluating how to roll Codex out to developers at company scale.
 | Infra to run | **None** (free AWS control plane) | ECS Fargate + ALB + Postgres |
 | Bedrock auth | Per-user federated IAM | Shared gateway task role |
 | Per-user attribution | CloudTrail `userIdentity` (native) | JWT claim → OTel header |
-| Hard per-user budgets | No (soft via quotas) | Yes |
+| Hard per-user budgets | No | Yes |
 | Codex provider | Native `amazon-bedrock` | Generic `openai` |
-| Time to first call | ~5 min + dev SSO sign-in | ~15 min + gateway bring-up |
+| Time to first call | ~5 min + developer SSO sign-in | ~15 min + gateway deployment |
 
 Full prereq checklists and comparison: **[docs/01-decide.md](docs/01-decide.md)**.
 
@@ -51,7 +51,7 @@ poetry run cxwb deploy --profile default    # deploys stacks if the profile owns
 poetry run cxwb distribute --profile default --bucket <bucket>   # one bundle per deployment
 ```
 
-Full walkthrough: **[QUICK_START.md](QUICK_START.md)**. The manual steps below deploy the same CloudFormation templates — use them when you want to customize a template, plug into existing IaC, or debug a failed stack.
+Full walkthrough: **[QUICK_START.md](QUICK_START.md)**. The manual steps below deploy the same CloudFormation templates — use them when you want to customize a template, integrate with existing IaC, or debug a failed stack.
 
 ---
 
@@ -64,13 +64,17 @@ aws cloudformation deploy \
   --stack-name codex-bedrock-idc \
   --template-file deployment/infrastructure/bedrock-auth-idc.yaml \
   --capabilities CAPABILITY_NAMED_IAM \
-  --region us-west-2
+  --region "$AWS_REGION"   # any region where your target Bedrock model is activated
 ```
 
 Creates a customer-managed Bedrock policy + an IAM role trusted by
 `sso.amazonaws.com` and scoped to `AWSReservedSSO_CodexBedrockUser_*` sessions.
+IAM is global, so the stack's region only controls where the CloudFormation
+record lives — pick the same region you'll call Bedrock from. See
+[docs/reference-regions.md](docs/reference-regions.md) for the model × region
+matrix.
 
-### 2. Wire it to a permission set (admin, once)
+### 2. Attach it to a permission set (admin, once)
 
 In IAM Identity Center, create a permission set named `CodexBedrockUser`,
 attach the customer-managed policy from step 1, and assign it to your Codex
@@ -81,16 +85,16 @@ developer group.
 ```bash
 deployment/scripts/generate-codex-sso-config.sh \
   --start-url https://d-xxxxxxxxxx.awsapps.com/start \
-  --sso-region us-east-1 \
-  --account-id 123456789012 \
+  --sso-region <your-idc-region> \
+  --account-id <your-account-id> \
   --permission-set CodexBedrockUser \
-  --bedrock-region us-west-2 \
+  --bedrock-region <your-bedrock-region> \
   --profile-name codex \
   --outdir ./dist/codex-sso
 ```
 
-Distribute `./dist/codex-sso/` via zip + S3 presigned URL, MDM, or your
-package manager of choice.
+Distribute `./dist/codex-sso/` via a zip file and S3 presigned URL, MDM, or your
+preferred package manager.
 
 ### 4. Install on developer machines
 

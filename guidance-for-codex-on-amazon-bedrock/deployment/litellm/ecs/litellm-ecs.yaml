@@ -28,10 +28,17 @@ Parameters:
 
   LiteLLMImage:
     Type: String
-    Default: ghcr.io/berriai/litellm:main-latest
+    AllowedPattern: ".+/.+:.+"
+    ConstraintDescription: >
+      Must be a fully-qualified image reference such as
+      <account>.dkr.ecr.<region>.amazonaws.com/codex-litellm:<tag>.
     Description: >
-      Build a custom image FROM ghcr.io/berriai/litellm:main-latest and COPY
-      litellm_config.yaml to /app/config.yaml, then push to ECR and reference here.
+      Required. Fully-qualified container image reference for the LiteLLM
+      gateway. Build a custom image using deployment/litellm/Dockerfile
+      (FROM ghcr.io/berriai/litellm:main-latest plus COPY litellm_config.yaml
+      /app/config.yaml), push it to ECR, and pass the image URI here. The
+      upstream ghcr.io/berriai/litellm image has no /app/config.yaml and will
+      crash-loop on startup.
 
   AllowedCidr:
     Type: String

@@ -1,10 +1,10 @@
 # Decide
 
-Two deployment paths, in recommended order. Pick the first one your org can
-actually run.
+Two deployment paths, in recommended order. Choose the first one your organization can
+run.
 
 > **Decision rule:** If you can run IAM Identity Center, use IAM Identity Center.
-> If you can't and you need centralized enforcement or hard per-user budgets,
+> If you cannot and you need centralized enforcement or hard per-user budgets,
 > run the Gateway.
 
 | | **IAM Identity Center** (recommended) | **Gateway** (alternative) |
@@ -18,9 +18,9 @@ actually run.
 | Codex provider | Native `amazon-bedrock` | Generic `openai` (loses native path) |
 | FedRAMP/GovCloud | IdC in GovCloud partition | ECS on GovCloud |
 
-## Prereq checklist — IAM Identity Center
+## Prerequisite checklist — IAM Identity Center
 
-Run this path if **all** of the following hold:
+Run this path if **all** of the following are true:
 
 - [ ] AWS Organizations is enabled (or you can enable it).
 - [ ] Your IdP supports SAML 2.0 + SCIM 2.0 (EntraID, Okta, Ping, JumpCloud,
@@ -30,17 +30,17 @@ Run this path if **all** of the following hold:
 - [ ] Amazon Bedrock is activated in at least one region you plan to use
       (see [reference-regions.md](reference-regions.md) for the model × region matrix).
 - [ ] Per-user *attribution* in CloudTrail/CUR is sufficient — you do **not**
-      require hard per-user token/cost cutoffs.
+      require hard per-user token or cost cutoffs.
 
-If all five check, go to [Deploy — IAM Identity Center](deploy-identity-center.md).
+If all five apply, proceed to [Deploy — IAM Identity Center](deploy-identity-center.md).
 
-## Prereq checklist — Gateway
+## Prerequisite checklist — Gateway
 
-Run this path if IdC is off the table **or** you need centralized
-enforcement. All of the following must hold:
+Run this path if IdC is not available **or** you need centralized
+enforcement. All of the following must apply:
 
-- [ ] IdC is not achievable, **or** you need one of: hard per-user token/cost
-      budgets with automatic cutoff behind one endpoint; reuse of an existing
+- [ ] IdC is not achievable, **or** you require one of the following: hard per-user token or cost
+      budgets with automatic cutoff behind a single endpoint; reuse of an existing
       platform-team gateway.
 - [ ] You have a container runtime you can operate (ECS Fargate, EKS, or
       equivalent) plus ALB and Postgres. Reference LiteLLM footprint is
@@ -53,25 +53,25 @@ enforcement. All of the following must hold:
 - [ ] Amazon Bedrock is activated in the region the gateway task role will
       call (see [reference-regions.md](reference-regions.md)).
 
-**Reference implementation:** this repo ships LiteLLM under
+**Reference implementation:** this repository ships LiteLLM under
 `deployment/litellm/` as a working example. The pattern applies equally to
-other OpenAI-compatible gateways — **Portkey**, **Kong AI Gateway**,
+other OpenAI-compatible gateways — **Portkey**, **Bifrost**, **Kong AI Gateway**,
 **Helicone**, the **AWS Bedrock Gateway** sample, or a custom FastAPI shim.
-Pick whichever matches your org's operational posture.
+Choose whichever matches your organization's operational posture.
 
 *(Canonical deploy doc: `deploy-gateway.md`.)*
 
 ## Why this order
 
-1. **Enterprise audience needs centralized cost + usage attribution with
+1. **Enterprise audiences need centralized cost and usage attribution with
    scalable distribution.** That eliminates the static Bedrock API key as a
-   ranked option — it's documented in Bedrock's own docs as a pilot/POC
+   ranked option — Bedrock's own documentation describes it as a pilot/POC
    mechanism, not an enterprise path.
-2. **IdC delivers all three off one identity plane.** SSO user name in
-   CloudTrail → CUR attribution; same identity stamped into OTel as
+2. **IdC delivers all three from a single identity plane.** SSO user name in
+   CloudTrail → CUR attribution; the same identity stamped into OTel as
    `user.id` → CloudWatch dashboards; signed AWS CLI v2 distribution →
-   zero SmartScreen/Gatekeeper friction.
-3. **The gateway's historical advantage is gone for Codex.** Codex natively
+   no SmartScreen or Gatekeeper friction.
+3. **The gateway's historical advantage no longer applies to Codex.** Codex natively
    speaks SigV4 to Bedrock via the AWS SDK credential chain. Pointing Codex at
    a gateway forces `model_provider = "openai"` with a custom `base_url`,
    abandoning the native `amazon-bedrock` code path. The gateway retains real
@@ -79,8 +79,8 @@ Pick whichever matches your org's operational posture.
 
 ## Open questions that may shift the pick
 
-- **Session duration vs. long Codex runs.** 8h default IdC session can
-  interrupt multi-hour agent runs. Raise permission-set session duration or
-  accept `aws sso login` re-auth as expected UX.
+- **Session duration vs. long Codex runs.** The 8-hour default IdC session can
+  interrupt multi-hour agent runs. Raise the permission-set session duration or
+  accept `aws sso login` re-authentication as expected UX.
 - **GovCloud parity.** Whether IdC-in-GovCloud meets the FedRAMP alignment
   some customers require is not yet confirmed.

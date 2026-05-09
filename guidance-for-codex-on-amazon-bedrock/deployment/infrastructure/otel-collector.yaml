@@ -57,7 +57,7 @@ Resources:
   ECSCluster:
     Type: AWS::ECS::Cluster
     Properties:
-      ClusterName: codex-otel-cluster
+      ClusterName: !Sub "${AWS::StackName}-cluster"
       ClusterSettings:
         - Name: containerInsights
           Value: enabled
@@ -72,13 +72,13 @@ Resources:
   CollectorLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: /ecs/otel-collector
+      LogGroupName: !Sub "/ecs/${AWS::StackName}-collector"
       RetentionInDays: 7
 
   MetricsLogGroup:
     Type: AWS::Logs::LogGroup
     Properties:
-      LogGroupName: /aws/codex/metrics
+      LogGroupName: !Sub "/aws/${AWS::StackName}/metrics"
       RetentionInDays: 30
       Tags:
         - Key: Purpose
@@ -177,10 +177,7 @@ Resources:
   LoadBalancer:
     Type: AWS::ElasticLoadBalancingV2::LoadBalancer
     Properties:
-      Name: !If
-        - HasCustomDomain
-        - otel-collector-https-alb
-        - otel-collector-alb
+      Name: !Sub "${AWS::StackName}-alb"
       Type: application
       IpAddressType: ipv4
       Scheme: internet-facing
@@ -302,7 +299,7 @@ Resources:
                   - ssm:GetParameter
                   - ssm:GetParameters
                 Resource:
-                  - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/codex-otel-config'
+                  - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}-config'
 
   TaskRole:
     Type: AWS::IAM::Role
@@ -343,13 +340,13 @@ Resources:
                   - ssm:GetParameter
                   - ssm:GetParameters
                 Resource:
-                  - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/codex-otel-config'
+                  - !Sub 'arn:${AWS::Partition}:ssm:${AWS::Region}:${AWS::AccountId}:parameter/${AWS::StackName}-config'
 
   # SSM Parameter for Configuration
   OTelConfig:
     Type: AWS::SSM::Parameter
     Properties:
-      Name: codex-otel-config
+      Name: !Sub "${AWS::StackName}-config"
       Type: String
       Tier: Advanced
       Description: Custom OpenTelemetry configuration for Codex
@@ -506,7 +503,7 @@ Resources:
   TaskDefinition:
     Type: AWS::ECS::TaskDefinition
     Properties:
-      Family: otel-collector
+      Family: !Sub "${AWS::StackName}-task"
       RequiresCompatibilities:
         - FARGATE
       NetworkMode: awsvpc
@@ -540,7 +537,7 @@ Resources:
     DependsOn:
       - HTTPListener
     Properties:
-      ServiceName: otel-collector-service
+      ServiceName: !Sub "${AWS::StackName}-service"
       Cluster: !Ref ECSCluster
       TaskDefinition: !Ref TaskDefinition
       LaunchType: FARGATE
