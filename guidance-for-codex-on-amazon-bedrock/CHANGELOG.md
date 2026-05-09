@@ -9,9 +9,10 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ### Added
 - Initial release of Guidance for Codex with Amazon Bedrock
+- `cxwb` wizard covering four deployment shapes: IdC deploy / IdC BYO / LiteLLM Gateway deploy / Gateway BYO
+- Gateway developer bundle generator (`generate-codex-gateway-config.sh`) — bundles never contain keys; developers self-serve via the gateway's SSO endpoint
 - Enterprise deployment patterns for OpenAI Codex CLI with Amazon Bedrock
 - OIDC-based identity provider integration (Auth0, Azure AD, Cognito, Okta)
-- `cxwb` CLI tool for deployment, packaging, and distribution management
 - Cross-region inference support via Amazon Bedrock CRIS profiles
 - Monitoring dashboard with CloudWatch metrics and analytics pipeline
 - Quota management per user and group

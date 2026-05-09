@@ -18,12 +18,11 @@ evaluating how to roll Codex out to developers at company scale.
 ## Pick your path in 60 seconds
 
 > **Decision rule:** If you can run IAM Identity Center, use IAM Identity Center.
-> If you can't — or you need hard per-user budgets or multi-provider routing —
-> run the Gateway.
+> If you can't — or you need hard per-user budgets — run the Gateway.
 
 | | **IAM Identity Center** _(recommended)_ | **Gateway** _(alternative)_ |
 |---|---|---|
-| Best for | Any org already using IdC / AWS SSO | Orgs that need hard budgets or multi-LLM routing |
+| Best for | Any org already using IdC / AWS SSO | Orgs that need hard per-user budgets |
 | Dev setup | `aws sso login` | OIDC JWT + `OPENAI_BASE_URL` |
 | Infra to run | **None** (free AWS control plane) | ECS Fargate + ALB + Postgres |
 | Bedrock auth | Per-user federated IAM | Shared gateway task role |
@@ -36,7 +35,27 @@ Full prereq checklists and comparison: **[docs/01-decide.md](docs/01-decide.md)*
 
 ---
 
-## Quick start — IAM Identity Center path
+## Fastest path — the `cxwb` wizard
+
+Guided wizard for all four deployment shapes this guide supports:
+
+| | Deploy stacks | Bundle only (BYO) |
+|---|---|---|
+| **IdC auth** | IdC stack + bundle | Bundle for existing IdC role |
+| **Gateway auth** | LiteLLM stacks + bundle | Bundle for existing gateway |
+
+```bash
+cd source/ && poetry install
+poetry run cxwb init                        # pick one of the four, answer prompts
+poetry run cxwb deploy --profile default    # deploys stacks if the profile owns them
+poetry run cxwb distribute --profile default --bucket <bucket>   # one bundle per deployment
+```
+
+Full walkthrough: **[QUICK_START.md](QUICK_START.md)**. The manual steps below deploy the same CloudFormation templates — use them when you want to customize a template, plug into existing IaC, or debug a failed stack.
+
+---
+
+## Quick start — IAM Identity Center path (manual)
 
 ### 1. Deploy the Bedrock auth stack (admin, once)
 
@@ -131,6 +150,7 @@ matrix: **[docs/reference-regions.md](docs/reference-regions.md)**.
 
 | If you want to… | Read |
 |---|---|
+| Run the guided `cxwb` wizard | [QUICK_START.md](QUICK_START.md) |
 | Choose a deployment path | [docs/01-decide.md](docs/01-decide.md) |
 | Deploy the recommended path | [docs/deploy-identity-center.md](docs/deploy-identity-center.md) |
 | Deploy the gateway alternative | [docs/deploy-gateway.md](docs/deploy-gateway.md) |

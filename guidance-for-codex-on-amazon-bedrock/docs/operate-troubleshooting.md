@@ -1,7 +1,6 @@
 # Operate — Troubleshooting
 
-Known failure modes across the three deploy paths, harvested from
-sandbox E2Es. Not exhaustive — add entries as new failure modes surface.
+Known failure modes across the deploy paths. Not exhaustive — add entries as new failure modes surface.
 
 Symptoms are grouped by path. The **All paths** section applies
 regardless of how you deployed.
@@ -24,10 +23,10 @@ regardless of how you deployed.
   `litellm_config.yaml`) isn't available in the target region, or it's
   only served through the mantle endpoint (GPT-5.4) and you're calling
   standard Converse, or vice-versa.
-- **Fix:** cross-check the model ID against the authoritative region
-  matrix at launch. Pre-launch, `openai.gpt-oss-120b-1:0` works via
-  standard Converse; `gpt-5.4` only via the mantle endpoint. See the
-  GPT-5.4 pre-flight checklist.
+- **Fix:** cross-check the model ID against the region matrix in
+  [reference-regions.md](reference-regions.md). `openai.gpt-oss-120b-1:0`
+  and similar models use standard Converse; `gpt-5.4` uses the mantle
+  endpoint.
 
 ### CloudTrail `userIdentity.principalId` shows assumed-role ARN, not SSO username
 - **Expected.** The SSO username lives in `userIdentity.onBehalfOf` or is
@@ -47,6 +46,13 @@ regardless of how you deployed.
   `DEV-SETUP.md`. If it persists, check `~/.aws/sso/cache/` has a fresh
   JSON blob with a future `expiresAt`.
 
+### Using `aws login` (console-login) profiles instead of `aws sso login`
+- **Requires:** Codex ≥ 0.130.0 (PR #21623 enabled the SDK's
+  `credentials-login` feature so `login_session` profiles resolve for Bedrock
+  SigV4 signing).
+- **Fix for older Codex:** upgrade to ≥ 0.130.0, or use an `aws sso login`
+  profile.
+
 ### `codex-sso-creds` works from terminal but not from the Codex desktop app / VS Code
 - **Likely cause:** GUI apps on macOS launch with a minimal PATH; the
   helper can't find `aws`.
@@ -55,13 +61,6 @@ regardless of how you deployed.
   `launchctl getenv PATH` as a fallback. If none resolve, symlink `aws`
   into `/usr/local/bin` or add an explicit path in the helper's candidate
   list.
-
-### `install.sh` edits `~/.codex/config.toml` but the `[otel]` block is missing
-- **Cause (fixed 2026-05-08):** old idempotency guard skipped the OTel
-  block whenever the `model_providers.amazon-bedrock` block already
-  existed. Guard now checks both independently.
-- **Fix:** re-run `install.sh` with a current bundle; managed fences
-  handle the merge.
 
 ---
 
@@ -82,8 +81,7 @@ regardless of how you deployed.
 - **Cause:** ALB `AllowedCidr` defaults to `10.0.0.0/16` — by design, the
   gateway is internal-only.
 - **Fix:** either deploy a bastion / connect through the corporate VPN, or
-  temporarily add a `/32` ingress rule to the ALB security group for
-  testing. Remove after.
+  temporarily add a `/32` ingress rule to the ALB security group. Remove after.
 
 ### LiteLLM returns `400` with `"LLM Provider NOT provided"`
 - **Cause:** the `model` parameter in the request doesn't match an alias
@@ -112,7 +110,7 @@ regardless of how you deployed.
   bundle re-bakes the header from `sts:GetCallerIdentity`.
 
 ### Collector logs show `404` on `/v1/logs` or `/v1/traces`
-- **Expected pre-fix; fixed 2026-05-08.** Codex emits logs + traces
-  alongside metrics; the collector now has `nop`-exporter pipelines so
-  clients don't spin on 4xx. If you're seeing this, your collector
-  template predates the fix — redeploy with current `otel-collector.yaml`.
+- **Cause:** Codex emits logs + traces alongside metrics; the collector
+  needs `nop`-exporter pipelines for those signals so clients don't spin
+  on 4xx. If you're seeing this, redeploy with the current
+  `otel-collector.yaml`.

@@ -2,16 +2,11 @@
 
 Stand an OpenAI-compatible proxy in front of Bedrock. Developers point Codex at
 the gateway with a per-user API key; the gateway authenticates to Bedrock with
-its ECS task role. Use this path when you need hard per-user budgets,
-multi-provider fan-out, or a single enforcement point that is not tied to AWS
-identity.
+its ECS task role. Use this path when you need hard per-user budgets or a
+single enforcement point that is not tied to AWS identity.
 
 If you only need per-user *attribution* and already run IdC, prefer
 `deploy-identity-center.md` — it is simpler and cheaper.
-
-Measured time-to-first-successful-Bedrock-call using the LiteLLM reference
-implementation: ~886s end-to-end from a clean account (2026-05-08), dominated
-by the 885s ECS+RDS stack create. Per-call latency once running: ~535ms.
 
 ## The pattern
 
@@ -40,9 +35,6 @@ A production-grade gateway for this use case needs to cover all of:
   stable to attribute cost and enforce quota against.
 - **Hard per-user budgets with automatic cutoff.** Not just alerts — a 429 when
   a user hits the limit. This is the headline reason to run a gateway at all.
-- **Multi-provider routing.** Bedrock today; Bedrock + OpenAI direct + Anthropic
-  direct tomorrow. Gateways earn their keep once you have more than one
-  upstream.
 - **OTel emission on success *and* failure.** Every call should produce a span
   or metric with the user-id dimension. Confirm the gateway actually emits
   failure events before relying on alarms.
@@ -53,7 +45,7 @@ A production-grade gateway for this use case needs to cover all of:
   GovCloud ECR mirrors, does the auth stack work without the commercial IdC
   control plane, and can the OTel pipeline write to GovCloud CloudWatch.
 
-If a candidate ticks all six, it will work here. The reference below uses
+If a candidate ticks all of the above, it will work here. The reference below uses
 LiteLLM, but the structure is the same for every alternative.
 
 ## LiteLLM reference implementation
@@ -64,7 +56,7 @@ blueprint for a different gateway.
 ### Prerequisites
 
 - AWS account with IAM, ECS, RDS, ECR, and Bedrock access.
-- Bedrock activated in the target region (today: `us-west-2` for GPT-5.4).
+- Bedrock activated in the target region. See [reference-regions.md](reference-regions.md) for the current model × region matrix.
 - Docker (local) + AWS CLI v2 (control host).
 - The OTel networking + collector stacks already deployed — the gateway reuses
   their VPC and collector endpoint. Stand them up first with:
@@ -113,12 +105,11 @@ Notes on the parameter defaults (hardening TODOs):
 
 - `AwsRegion` defaults to `us-east-1`; **always override** it to the region
   where Bedrock is actually enabled.
-- `AllowedCidr` defaults to `10.0.0.0/16` (VPC-internal). For E2E testing from
-  outside the VPC, add a temporary `/32` ingress rule on the ALB security
+- `AllowedCidr` defaults to `10.0.0.0/16` (VPC-internal). To reach the gateway
+  from outside the VPC, add a temporary `/32` ingress rule on the ALB security
   group; remove it after.
 - The template's `litellm_config.yaml` ships a `bedrock/openai.gpt-5.4`
-  placeholder that does not resolve today. The `gpt-oss-120b` alias works end
-  to end; `gpt-5.4` is re-verified at launch.
+  placeholder. The `gpt-oss-120b` alias is a good plumbing test alternative.
 
 ### 3. Verify the gateway is reachable
 
@@ -168,7 +159,7 @@ curl -s "$GATEWAY/v1/chat/completions" \
 
 LiteLLM's `callbacks: ["otel"]` emits spans to the collector ALB on every
 call. In the OTel collector log group (`/ecs/otel-collector`), search for
-`otelcol.signal=traces` — 8 spans per call round-trip from the 2026-05-08 run.
+`otelcol.signal=traces` to confirm spans are landing.
 
 ### Local iteration
 
@@ -220,7 +211,4 @@ All of these cover the pattern above; pick by what your org already operates.
 - **Region mismatch footgun.** Template default `AwsRegion=us-east-1`;
   override it on every deploy.
 - **`gpt-5.4` model alias.** Shipped in `litellm_config.yaml` as a
-  placeholder; verify it resolves when GPT-5.4 launches.
-- **Full Codex-client leg not yet re-run.** The 2026-05-08 E2E verified the
-  gateway's OpenAI wire format via `curl`; the `codex` binary against the
-  gateway is re-run at the GPT-5.4 pre-flight.
+  placeholder; verify it resolves before relying on it.

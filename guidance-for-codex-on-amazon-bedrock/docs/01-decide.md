@@ -4,7 +4,7 @@ Two deployment paths, in recommended order. Pick the first one your org can
 actually run.
 
 > **Decision rule:** If you can run IAM Identity Center, use IAM Identity Center.
-> If you can't and you need centralized enforcement or multi-provider fan-out,
+> If you can't and you need centralized enforcement or hard per-user budgets,
 > run the Gateway.
 
 | | **IAM Identity Center** (recommended) | **Gateway** (alternative) |
@@ -28,7 +28,7 @@ Run this path if **all** of the following hold:
 - [ ] You can distribute AWS CLI v2 to developers (winget / MSI / Homebrew /
       MDM).
 - [ ] Amazon Bedrock is activated in at least one region you plan to use
-      (today: `us-west-2` for GPT-5.4).
+      (see [reference-regions.md](reference-regions.md) for the model × region matrix).
 - [ ] Per-user *attribution* in CloudTrail/CUR is sufficient — you do **not**
       require hard per-user token/cost cutoffs.
 
@@ -36,12 +36,11 @@ If all five check, go to [Deploy — IAM Identity Center](deploy-identity-center
 
 ## Prereq checklist — Gateway
 
-Run this path if IdC is off the table **or** you need enforcement /
-multi-provider fan-out. All of the following must hold:
+Run this path if IdC is off the table **or** you need centralized
+enforcement. All of the following must hold:
 
 - [ ] IdC is not achievable, **or** you need one of: hard per-user token/cost
-      budgets with automatic cutoff; multi-provider fan-out (Bedrock + Azure
-      OpenAI + self-hosted) behind one endpoint; reuse of an existing
+      budgets with automatic cutoff behind one endpoint; reuse of an existing
       platform-team gateway.
 - [ ] You have a container runtime you can operate (ECS Fargate, EKS, or
       equivalent) plus ALB and Postgres. Reference LiteLLM footprint is
@@ -52,7 +51,7 @@ multi-provider fan-out. All of the following must hold:
       = "openai"` + custom `base_url`), bypassing the native `amazon-bedrock`
       code path.
 - [ ] Amazon Bedrock is activated in the region the gateway task role will
-      call (today: `us-west-2` for GPT-5.4).
+      call (see [reference-regions.md](reference-regions.md)).
 
 **Reference implementation:** this repo ships LiteLLM under
 `deployment/litellm/` as a working example. The pattern applies equally to
@@ -76,7 +75,7 @@ Pick whichever matches your org's operational posture.
    speaks SigV4 to Bedrock via the AWS SDK credential chain. Pointing Codex at
    a gateway forces `model_provider = "openai"` with a custom `base_url`,
    abandoning the native `amazon-bedrock` code path. The gateway retains real
-   value only for *enforcement* and *multi-provider* fan-out.
+   value only for *enforcement* (hard per-user budgets, central policy).
 
 ## Open questions that may shift the pick
 

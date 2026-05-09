@@ -4,9 +4,6 @@ Federate AWS IAM Identity Center (IdC) from your existing corporate IdP so
 developers get AWS credentials backed by their SSO identity. Codex reads the
 resulting profile through the standard AWS SDK credential chain.
 
-Measured time-to-first-successful-Bedrock-call: ~275s end-to-end on macOS
-(2026-05-08) — mostly the interactive browser sign-in.
-
 ## Prerequisites
 
 - **AWS Organizations** enabled (IdC requires Orgs).
@@ -14,7 +11,7 @@ Measured time-to-first-successful-Bedrock-call: ~275s end-to-end on macOS
   Okta, Ping, JumpCloud, Google Workspace, CyberArk, OneLogin.
 - Admin access in both the AWS management account and the corporate IdP.
 - AWS CLI v2 distributable to end users via winget / MSI / Homebrew / MDM.
-- Bedrock activated in the target region(s). For GPT-5.4 today: `us-west-2`.
+- Bedrock activated in the target region(s). See [reference-regions.md](reference-regions.md) for the current model × region matrix.
 
 ## Admin setup (one-time)
 
@@ -99,7 +96,26 @@ deployment/scripts/generate-codex-sso-config.sh \
 ```
 
 `--otel-endpoint` is optional; omit it if you're not running the OTel stack.
-The bundle is self-contained — zip `./dist/codex-sso/` and distribute.
+The bundle is self-contained — zip `./dist/codex-sso/` and distribute via
+whatever channel your org already uses (MDM, internal package repo, shared
+drive, etc.).
+
+#### Optional: presigned S3 URL distribution
+
+For orgs without an MDM or package-repo story, S3 presigned URLs are a cheap
+drop-in. Upload the zipped bundle to a private S3 bucket and share a
+time-limited URL:
+
+```bash
+( cd dist && zip -r codex-sso.zip codex-sso )
+aws s3 cp dist/codex-sso.zip s3://<your-bundle-bucket>/codex-sso.zip
+aws s3 presign s3://<your-bundle-bucket>/codex-sso.zip --expires-in 604800
+```
+
+Share the URL via Slack, email, or ticket. Rotate by re-running the generator
+and re-uploading — previous URLs expire on their own. Keep the bucket private;
+the presigned URL is the only grant. Suitable for small teams; for scaled
+rollout prefer MDM.
 
 ## End-user flow
 
@@ -134,6 +150,11 @@ The bundled helper auto-launches plain `aws sso login` on cache miss and will
 fail on headless hosts. Pre-warm with `--no-browser` before starting Codex;
 re-run when the 8h token expires. Fully non-interactive fleet/CI pre-warm is
 not yet supported.
+
+### `aws login` (console-login) profiles
+
+Codex ≥ 0.130.0 also resolves credentials from `aws login` console-login
+profiles (`login_session`) via the standard AWS SDK credential chain.
 
 ### Uninstall
 
@@ -214,7 +235,7 @@ Useful flags:
 | `--dashboard-name` | CloudWatch dashboard name (default `CodexOnBedrock`). |
 | `--input-price` / `--output-price` / `--cached-input-price` | Per-1M-token USD for the dashboard's spend-estimate widgets. Defaults are placeholders — update after GPT-5.4 pricing publishes. |
 
-### 2. Harden the collector (opt-in — recommended before non-sandbox use)
+### 2. Harden the collector (opt-in — recommended before production use)
 
 Default posture is HTTP-only: the collector accepts any `x-user-id` value
 (trust-on-distribution). For production, pass all five flags below together

@@ -14,21 +14,19 @@ getting-started guide — if that guide disagrees, it wins.
 
 ## Region × model matrix
 
-Verified 2026-05-08 via `aws bedrock list-foundation-models` against the
-sandbox account. GPT-5.4 availability confirmed for `us-west-2` from the
-authoritative AWS getting-started guide ("Production region"); re-verify at
-launch.
+AWS's getting-started guide names `us-west-2` as the GPT-5.4 "Production
+region". Run `aws bedrock list-foundation-models --region <region>` to check
+availability in any other region as access rolls out.
 
-| Model ID | `us-west-2` | `us-east-1` | `us-east-2` | Notes |
-|---|---|---|---|---|
-| `openai.gpt-5.4` | Yes (mantle) | Unknown — verify at launch | Unknown — verify at launch | Primary model. Served via `bedrock-mantle.<region>.api.aws/openai/v1/responses`. Codex `amazon-bedrock` provider targets this endpoint. |
-| `openai.gpt-oss-120b-1:0` | Yes | Yes | Yes | Standard Converse API. Useful for plumbing tests ahead of GPT-5.4 launch. |
-| `openai.gpt-oss-20b-1:0` | Yes | Yes | Yes | Standard Converse API. |
-| `openai.gpt-oss-safeguard-120b` | Yes | Yes | Yes | Safeguard variant. |
-| `openai.gpt-oss-safeguard-20b` | Yes | Yes | Yes | Safeguard variant. |
+| Model ID | Endpoint | Notes |
+|---|---|---|
+| `openai.gpt-5.4` | Mantle | Primary model. Served via `bedrock-mantle.<region>.api.aws/openai/v1/responses`. Codex `amazon-bedrock` provider targets this endpoint. |
+| `openai.gpt-oss-120b-1:0` | Standard Converse | Useful for plumbing tests. |
+| `openai.gpt-oss-20b-1:0` | Standard Converse | |
+| `openai.gpt-oss-safeguard-120b` | Standard Converse | Safeguard variant. |
+| `openai.gpt-oss-safeguard-20b` | Standard Converse | Safeguard variant. |
 
-**Recommended default:** `us-west-2` with `openai.gpt-5.4`. This is what the
-getting-started guide's quickstart and every sample in this repo target.
+CLI examples in this repo use `us-west-2` as a placeholder. Substitute any region where your target model is activated.
 
 ## Endpoints
 

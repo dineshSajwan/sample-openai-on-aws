@@ -64,7 +64,7 @@ this in — see `deploy-identity-center.md` §5).
 
 ### Metrics Codex actually emits
 
-Verified against Codex 0.130.0-alpha.7 (2026-05-08):
+Metrics emitted by Codex ≥ 0.130:
 
 - `codex.api_request`, `codex.api_request.duration_ms` — HTTP call count + latency; dimension `status`.
 - `codex.turn.e2e_duration_ms` — wall-clock per turn.
