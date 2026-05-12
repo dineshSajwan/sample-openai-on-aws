@@ -19,6 +19,7 @@ IDC_TEMPLATE = INFRA_DIR / "bedrock-auth-idc.yaml"
 NETWORKING_TEMPLATE = INFRA_DIR / "networking.yaml"
 OTEL_TEMPLATE = INFRA_DIR / "otel-collector.yaml"
 LITELLM_TEMPLATE = LITELLM_DIR / "ecs" / "litellm-ecs.yaml"
+USER_KEY_MAPPING_TEMPLATE = LITELLM_DIR / "ecs" / "user-key-mapping.yaml"
 
 GENERATE_IDC_BUNDLE = SCRIPTS_DIR / "generate-codex-sso-config.sh"
 GENERATE_GATEWAY_BUNDLE = SCRIPTS_DIR / "generate-codex-gateway-config.sh"

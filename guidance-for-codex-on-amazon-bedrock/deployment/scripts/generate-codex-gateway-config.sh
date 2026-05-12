@@ -128,7 +128,22 @@ Run \`./uninstall.sh\` to remove it.
 - Do not commit the key.
 - The gateway will 429 on budget exhaustion — request a raise via your ops channel.
 - Rotation: request a new key; the old one is revoked.
+- If key expires, run: ./refresh-key.sh
 SETUP
+
+# Copy refresh script if it exists
+REFRESH_SCRIPT="$(dirname "$0")/../../source/refresh-codex-key.sh"
+if [[ -f "$REFRESH_SCRIPT" ]]; then
+  cp "$REFRESH_SCRIPT" "$OUTDIR/refresh-key.sh"
+  chmod +x "$OUTDIR/refresh-key.sh"
+
+  # Update GATEWAY_URL in the script
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    sed -i '' "s|GATEWAY_URL=\${GATEWAY_URL:-.*}|GATEWAY_URL=\${GATEWAY_URL:-${GATEWAY_URL%/v1}}|g" "$OUTDIR/refresh-key.sh"
+  else
+    sed -i "s|GATEWAY_URL=\${GATEWAY_URL:-.*}|GATEWAY_URL=\${GATEWAY_URL:-${GATEWAY_URL%/v1}}|g" "$OUTDIR/refresh-key.sh"
+  fi
+fi
 
 echo "Wrote $OUTDIR/"
 ls -1 "$OUTDIR"

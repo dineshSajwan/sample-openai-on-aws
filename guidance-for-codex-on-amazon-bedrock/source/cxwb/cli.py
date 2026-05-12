@@ -7,6 +7,8 @@ from pathlib import Path
 import click
 
 from . import __version__, profile
+from .commands import build as build_cmd
+from .commands import build_jwt as build_jwt_cmd
 from .commands import deploy as deploy_cmd
 from .commands import destroy as destroy_cmd
 from .commands import distribute as distribute_cmd
@@ -23,6 +25,24 @@ def cli() -> None:
 @cli.command(help="Configure a deployment profile (interactive).")
 def init() -> None:
     init_cmd.run()
+
+
+@cli.command(help="Build and push LiteLLM Docker image to ECR.")
+@click.option("--profile", "profile_name", default="default", show_default=True)
+@click.option(
+    "--multi-arch/--no-multi-arch",
+    default=True,
+    show_default=True,
+    help="Build for both amd64 and arm64 architectures (requires Docker buildx)",
+)
+def build(profile_name: str, multi_arch: bool) -> None:
+    build_cmd.run(profile_name, multi_arch)
+
+
+@cli.command("build-jwt", help="Build and push JWT middleware Docker image to ECR.")
+@click.option("--profile", "profile_name", default="default", show_default=True)
+def build_jwt(profile_name: str) -> None:
+    build_jwt_cmd.run(profile_name)
 
 
 @cli.command(help="Deploy the stacks for a profile.")
