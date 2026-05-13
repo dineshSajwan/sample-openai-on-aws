@@ -45,9 +45,15 @@ fi
 
 mkdir -p "$OUTDIR"
 
-cat >"$OUTDIR/config.toml.fragment" <<TOML
+cat >"$OUTDIR/config.toml.fragment" <<'TOML'
 # >>> codex-gateway managed: do not edit inside fences <<<
 # Codex CLI configuration for LiteLLM Gateway
+#
+# IMPORTANT: You must set OPENAI_API_KEY environment variable
+# AND update the http_headers below with your actual API key
+TOML
+
+cat >>"$OUTDIR/config.toml.fragment" <<TOML
 model = "$MODEL"
 model_provider = "litellm-gateway"
 
@@ -56,6 +62,9 @@ name = "LiteLLM Gateway"
 type = "openai"
 base_url = "$GATEWAY_URL"
 api_key = "env:OPENAI_API_KEY"
+# REQUIRED: Codex CLI needs explicit Authorization header for custom providers
+# Replace YOUR_API_KEY_HERE with your actual sk-litellm-... key
+http_headers = { Authorization = "Bearer YOUR_API_KEY_HERE" }
 # >>> end codex-gateway managed <<<
 TOML
 
@@ -67,6 +76,35 @@ cfg="$HOME/.codex/config.toml"
 mkdir -p "$HOME/.codex"
 touch "$cfg"
 
+# Check if API key needs to be set
+fragment="$here/config.toml.fragment"
+if grep -q "YOUR_API_KEY_HERE" "$fragment"; then
+  echo "════════════════════════════════════════════════════════════"
+  echo "Codex CLI - API Key Setup"
+  echo "════════════════════════════════════════════════════════════"
+  echo ""
+  echo "Enter your LiteLLM Gateway API key (starts with sk-litellm-):"
+  echo "(Input will be hidden for security)"
+  echo ""
+  read -s -p "API Key: " API_KEY
+  echo ""
+
+  # Validate format
+  if [[ ! "$API_KEY" =~ ^sk- ]]; then
+    echo ""
+    echo "❌ Invalid API key format. Key should start with 'sk-'"
+    echo "   Please run ./install.sh again with the correct key."
+    exit 1
+  fi
+
+  # Update the config fragment with the actual key
+  sed "s|YOUR_API_KEY_HERE|$API_KEY|g" "$fragment" > "$fragment.tmp"
+  mv "$fragment.tmp" "$fragment"
+
+  echo "✓ API key configured"
+  echo ""
+fi
+
 # Strip any prior managed block, then append.
 awk '/# >>> end codex-gateway managed/{skip=0; next} /# >>> codex-gateway managed/{skip=1} !skip{print}' "$cfg" >"$cfg.tmp"
 mv "$cfg.tmp" "$cfg"
@@ -74,7 +112,7 @@ mv "$cfg.tmp" "$cfg"
 [[ -s "$cfg" && $(tail -c1 "$cfg") != "" ]] && printf '\n' >>"$cfg"
 cat "$here/config.toml.fragment" >>"$cfg"
 
-echo "✓ Wrote managed block to $cfg"
+echo "✓ Wrote configuration to $cfg"
 
 # Remove OpenAI auth.json to prevent conflicts
 if [[ -f "$HOME/.codex/auth.json" ]]; then
@@ -102,11 +140,19 @@ if [[ -n "$SHELL_RC" ]]; then
 fi
 
 echo ""
+echo "════════════════════════════════════════════════════════════"
+echo "✅ Installation Complete!"
+echo "════════════════════════════════════════════════════════════"
+echo ""
 echo "Next steps:"
-echo "  1. Set your API key: export OPENAI_API_KEY=sk-litellm-xxxxx"
-echo "  2. Add to shell profile for persistence (see DEV-SETUP.md)"
-echo "  3. Reload shell: source $SHELL_RC"
-echo "  4. Test: codex-gateway exec 'Say hello'"
+echo "  1. Reload your shell: source $SHELL_RC"
+echo "  2. Set environment variable (for curl/API access):"
+echo "     export OPENAI_API_KEY=<your-key>"
+echo "  3. Test Codex CLI:"
+echo "     codex-gateway exec 'Say hello'"
+echo ""
+echo "See DEV-SETUP.md for detailed usage instructions."
+echo "════════════════════════════════════════════════════════════"
 INSTALL
 chmod +x "$OUTDIR/install.sh"
 
@@ -186,7 +232,13 @@ $KEY_SECTION
 ./install.sh
 \`\`\`
 
-This writes Codex CLI configuration to \`~/.codex/config.toml\` with the \`litellm-gateway\` provider.
+The installer will:
+1. **Prompt for your API key** (input is hidden for security)
+2. Configure \`~/.codex/config.toml\` with the \`litellm-gateway\` provider
+3. Add \`codex-gateway\` alias to your shell profile
+4. Remove any conflicting OpenAI authentication
+
+**Note:** The API key is embedded in \`http_headers\` because Codex CLI doesn't automatically send the Authorization header for custom providers. This is a workaround for that limitation.
 
 ---
 
