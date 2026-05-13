@@ -156,15 +156,9 @@ Corporate IdP (Okta/Azure) → OIDC/JWT → JWT Middleware → LiteLLM Gateway �
 1. **Admin-Generated Keys** (simplest) — Admin creates keys via LiteLLM UI, shares with developers
 2. **OIDC Self-Service** (scalable) — Developers generate keys via SSO portal using custom JWT middleware (no Enterprise license required)
 
-### Gateway Options
+### Gateway Implementation
 
-| Gateway | Deployment | Best For |
-|---------|-----------|----------|
-| **LiteLLM** (recommended) | ECS Fargate | Open source, maximum control, deep Bedrock integration |
-| **Portkey** | Managed SaaS | Fastest setup, built-in observability |
-| **Custom** | API Gateway + Lambda | Native AWS, lower traffic volumes |
-
-**LiteLLM is the recommended default** — open source, OpenAI-compatible, native Bedrock support, virtual keys per user/team, budget enforcement, OTel metrics.
+This guidance uses **LiteLLM** deployed on ECS Fargate — open source, OpenAI-compatible, native Bedrock support, virtual keys per user/team, budget enforcement, OTel metrics.
 
 ### What Gets Deployed
 
