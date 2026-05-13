@@ -99,13 +99,6 @@ Corporate IdP (Okta/Azure) → SAML → IAM Identity Center → AWS credentials 
 - IAM Identity Center permission set (if not already configured)
 - Developer bundle: bash scripts + config snippets (~15 KB)
 
-### What Is Not Included
-
-- Hard per-user/per-team budget enforcement (use Pattern 2)
-- Rate limiting at request time (use Pattern 2)
-- Model routing or automatic fallback (use Pattern 2)
-- Productivity analytics or ROI reporting (use Pattern 3)
-
 ### Quick Start
 
 **→ [QUICKSTART_PATTERN_IDC.md](QUICKSTART_PATTERN_IDC.md)**
@@ -168,11 +161,6 @@ This guidance uses **LiteLLM** deployed on ECS Fargate — open source, OpenAI-c
 - RDS Postgres or DynamoDB for gateway state
 - Developer bundle: config snippets + gateway URL (~8 KB)
 
-### What Is Not Included
-
-- Long-term analytics pipeline (use Pattern 3)
-- Productivity platform integrations (use Pattern 3)
-- ROI reporting dashboards (use Pattern 3)
 
 ### Quick Start
 
@@ -186,10 +174,6 @@ This guidance uses **LiteLLM** deployed on ECS Fargate — open source, OpenAI-c
 - (Optional) Identity provider with OIDC support for self-service (Okta, Azure AD, Auth0, Cognito)
 
 **Deployment time:** 15-20 minutes (add 30 min for OIDC setup)
-
-**Cost:** 
-- Base: ~$100-150/month (ECS Fargate + ALB + RDS)
-- With OIDC: Additional DynamoDB and Lambda costs (minimal)
 
 ---
 
