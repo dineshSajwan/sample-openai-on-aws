@@ -59,7 +59,7 @@ other OpenAI-compatible gateways — **Portkey**, **Bifrost**, **Kong AI Gateway
 **Helicone**, the **AWS Bedrock Gateway** sample, or a custom FastAPI shim.
 Choose whichever matches your organization's operational posture.
 
-*(Canonical deploy doc: `deploy-gateway.md`.)*
+*(Canonical deploy doc: [QUICKSTART_PATTERN_GATEWAY.md](../QUICKSTART_PATTERN_GATEWAY.md).)*
 
 ## Why this order
 

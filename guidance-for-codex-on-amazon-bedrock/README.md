@@ -190,6 +190,7 @@ Corporate IdP (Okta/Azure) → OIDC/JWT → JWT Middleware → LiteLLM Gateway �
 - AWS account with ECS, VPC, and ALB permissions
 - Amazon Bedrock activated in target regions
 - Docker installed (for building LiteLLM image)
+- Python 3.10-3.13 + uv package manager
 - (Optional) Identity provider with OIDC support for self-service (Okta, Azure AD, Auth0, Cognito)
 
 **Deployment time:** 15-20 minutes (add 30 min for OIDC setup)
@@ -328,7 +329,7 @@ Full region × model matrix: **[docs/reference-regions.md](docs/reference-region
 ### Architecture & Deployment
 - **[docs/01-decide.md](docs/01-decide.md)** — Detailed pattern comparison
 - **[docs/deploy-identity-center.md](docs/deploy-identity-center.md)** — Pattern 1 technical guide
-- **[docs/deploy-gateway.md](docs/deploy-gateway.md)** — Pattern 2 technical guide
+- **[QUICKSTART_PATTERN_GATEWAY.md](QUICKSTART_PATTERN_GATEWAY.md)** — Pattern 2 technical guide (use quickstart instead)
 
 ### Operations
 - **[docs/operate-monitoring.md](docs/operate-monitoring.md)** — Monitoring and cost attribution
@@ -365,9 +366,10 @@ uv run cxwb distribute --profile <name> # Generate developer bundles
 
 **Software:**
 - Python 3.10-3.13
-- Poetry (dependency management)
+- uv (package manager - [install guide](https://docs.astral.sh/uv/getting-started/installation/))
 - AWS CLI v2
 - Git
+- Docker (for Pattern 2/3 gateway deployments)
 
 **AWS Permissions:**
 - CloudFormation stack creation

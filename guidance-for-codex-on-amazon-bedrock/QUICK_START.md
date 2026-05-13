@@ -93,4 +93,4 @@ It intentionally does not:
 - Generate or rotate per-user gateway keys (developers self-serve via the gateway's SSO endpoint).
 - Manage LiteLLM per-user budgets.
 
-For anything beyond the standard path, refer to the manual docs: [docs/deploy-identity-center.md](docs/deploy-identity-center.md) and [docs/deploy-gateway.md](docs/deploy-gateway.md). The wizard and the manual path deploy the same templates.
+For anything beyond the standard path, refer to the manual docs: [docs/deploy-identity-center.md](docs/deploy-identity-center.md) and [QUICKSTART_PATTERN_GATEWAY.md](QUICKSTART_PATTERN_GATEWAY.md). The wizard and the manual path deploy the same templates.

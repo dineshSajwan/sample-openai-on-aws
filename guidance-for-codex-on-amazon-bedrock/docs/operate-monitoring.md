@@ -192,7 +192,7 @@ If you run the LiteLLM Gateway (Path 2), the identity chain splits:
   username in whatever BI layer you use.
 
 This is the principal operational cost of choosing the Gateway path. See
-`deploy-gateway.md` for setup and the LiteLLM spend-table schema.
+[QUICKSTART_PATTERN_GATEWAY.md](../QUICKSTART_PATTERN_GATEWAY.md) for setup and the LiteLLM spend-table schema.
 
 ---
 
