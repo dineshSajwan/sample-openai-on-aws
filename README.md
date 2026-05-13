@@ -98,7 +98,9 @@ uv run cxwb distribute --bucket my-bucket  # Generate developer bundle
 
 ---
 
-## 🚀 Getting Started
+## 🚀 Notebooks and Examples
+
+**Note:** These notebooks demonstrate GPT-OSS model usage on Bedrock and SageMaker, separate from the enterprise deployment guidance above.
 
 Start with our foundational notebooks:
 
