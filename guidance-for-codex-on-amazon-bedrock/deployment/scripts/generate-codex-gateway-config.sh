@@ -132,7 +132,7 @@ if [[ -n "$SHELL_RC" ]]; then
   if ! grep -q "alias codex-gateway=" "$SHELL_RC" 2>/dev/null; then
     echo "" >> "$SHELL_RC"
     echo "# Codex CLI alias for LiteLLM Gateway" >> "$SHELL_RC"
-    echo 'alias codex-gateway='"'"'codex -c model_provider="litellm-gateway" -c model="gpt-4o"'"'"'' >> "$SHELL_RC"
+    echo 'alias codex-gateway='"'"'codex -c model_provider="litellm-gateway" -c model="'"$MODEL"'"'"'"'' >> "$SHELL_RC"
     echo "✓ Added 'codex-gateway' alias to $SHELL_RC"
   else
     echo "✓ Alias 'codex-gateway' already exists in $SHELL_RC"

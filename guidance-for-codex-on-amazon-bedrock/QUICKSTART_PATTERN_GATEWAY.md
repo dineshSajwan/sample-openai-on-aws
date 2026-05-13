@@ -138,6 +138,8 @@ codex-gateway-config/
 
 ## Developer Installation
 
+**Getting your API key:** See [Getting API Key - Two Options](#getting-api-key---two-options) section below for how to obtain your key.
+
 **Developers receive the bundle and:**
 
 ```bash
@@ -145,8 +147,7 @@ codex-gateway-config/
 unzip codex-gateway-config.zip
 cd codex-gateway-config/
 
-# 2. Get API key from admin
-# See "Getting API Key - Two Options" section below for how to obtain your key
+# 2. Get API key from admin (see "Getting API Key - Two Options" section)
 
 # 3. Run installer (will prompt for API key)
 ./install.sh
@@ -331,349 +332,29 @@ source ~/.bashrc # Linux
 See the [complete guide](OIDC_SELF_SERVICE_SETUP.md) for detailed setup steps, troubleshooting, and monitoring.
 
 ---
-| Field | Purpose | Used By |
-|-------|---------|---------|
-| `model` | Default model alias to use | Codex CLI, curl/SDK |
-| `model_provider` | Which provider config to use | Codex CLI |
-| `name` | Human-readable provider name | Codex CLI UI |
-| `type` | API protocol format | Codex CLI (validates compatibility) |
-| `base_url` | Gateway endpoint (must end in `/v1`) | Codex CLI, curl/SDK |
-| `api_key` | Environment variable for API key | curl/SDK (reads from `$OPENAI_API_KEY`) |
-| `http_headers` | Explicit Authorization header | Codex CLI (workaround for bug) |
 
-**Why Two API Key Fields?**
+## What is codex-gateway?
 
-Codex CLI has a bug where it doesn't automatically send the `api_key` field as an Authorization header for custom providers. To work around this:
-
-- **`api_key = "env:OPENAI_API_KEY"`** → Used by curl and OpenAI SDK (reads from environment variable)
-- **`http_headers = { Authorization = "Bearer sk-..." }`** → Used by Codex CLI (embedded directly in config)
-
-**Getting Your API Key:**
-
-The install script prompts you for your API key during setup. If you need to get your key:
-
-1. **Contact your admin** for a LiteLLM API key (starts with `sk-litellm-...`)
-2. The admin can generate keys via:
-   - LiteLLM Dashboard: `http://<gateway-url>/ui` → "Keys" → "Generate Key"
-   - CLI: `litellm --master-key <master-key> --user <username> --budget <amount>`
-
-**Security Note:** The API key is embedded in your config file. Do not commit `~/.codex/config.toml` to version control. The install script hides your input when you type the key.
-
----
-
-### Using Codex CLI with Gateway
-
-**The install script automatically creates a `codex-gateway` alias for you!**
-
-#### Three Ways to Use Codex CLI
-
-**Option 1: Using `codex-gateway` alias (⭐ Recommended)**
+**`codex-gateway` is an alias created by `install.sh` — it's a shortcut for calling Codex CLI with the right flags.**
 
 ```bash
-# One-shot commands
-codex-gateway exec "Write a Python hello world function"
-codex-gateway exec "Explain this file" @README.md
+# The alias looks like this:
+alias codex-gateway='codex -c model_provider="litellm-gateway" -c model="openai.gpt-5.4"'
 
-# Interactive mode
-codex-gateway
+# Without the alias, you'd have to type:
+codex -c 'model_provider="litellm-gateway"' -c 'model="openai.gpt-5.4"' exec "your prompt"
 
-# Chat mode
-codex-gateway chat "How do I parse JSON in Python?"
+# With the alias, you just type:
+codex-gateway exec "your prompt"
 ```
 
-**Option 2: Using `codex` with explicit flags**
-
-```bash
-# Useful if you don't have the alias or want full control
-codex -c 'model_provider="litellm-gateway"' -c 'model="gpt-4o"' exec "your prompt"
-
-# Interactive
-codex -c 'model_provider="litellm-gateway"' -c 'model="gpt-4o"'
-```
-
-**Option 3: Plain `codex` ⚠️ DON'T USE THIS**
-
-```bash
-codex  # ❌ This connects to api.openai.com, NOT your gateway!
-       # You'll see a sign-in prompt asking for OpenAI credentials
-```
-
-**How the alias works:**
-
-```bash
-# The codex-gateway alias is just a shortcut:
-alias codex-gateway='codex -c model_provider="litellm-gateway" -c model="gpt-4o"'
-
-# It tells Codex to:
-# 1. Use custom provider "litellm-gateway" (from ~/.codex/config.toml)
-# 2. Use model "gpt-4o" (mapped by gateway to Bedrock model)
-# 3. Send requests to: http://<gateway-url>/v1
-# 4. Include Authorization header with your API key
-```
-
----
-
-### Test Your Setup
-
-After running `./install.sh`, test both access methods to verify they route through your gateway.
-
-#### Test 1: Direct API Call (curl)
-
-```bash
-# Set API key
-export OPENAI_API_KEY="sk-litellm-xxxxxxxxxxxxx"
-
-# Test with curl
-curl -X POST "http://<gateway-url>/v1/chat/completions" \
-  -H "Authorization: Bearer $OPENAI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{
-    "model": "gpt-4o",
-    "messages": [{"role": "user", "content": "What is 2+2? Answer in one word"}]
-  }'
-
-# Expected output:
-# {
-#   "id": "chatcmpl-...",
-#   "choices": [{
-#     "message": {
-#       "content": "Four",
-#       "role": "assistant"
-#     }
-#   }],
-#   "usage": {"total_tokens": 73, ...}
-# }
-```
-
-✅ **Success indicators:**
-- Returns JSON with `choices[0].message.content`
-- No errors about authentication
-- Response time ~2-3 seconds
-
-❌ **Common errors:**
-- `401 Unauthorized` → API key is wrong or not set
-- `Connection refused` → Gateway URL is wrong or gateway is down
-- `timeout` → Gateway is not accessible from your network
-
-#### Test 2: Codex CLI
-
-```bash
-# Reload shell to activate alias
-source ~/.zshrc  # or ~/.bashrc
-
-# Test with codex-gateway alias
-codex-gateway exec "What is 2+2? Answer in one word"
-
-# Expected output:
-# OpenAI Codex v0.130.0
-# --------
-# model: gpt-4o
-# provider: litellm-gateway
-# --------
-# user
-# What is 2+2? Answer in one word
-# codex
-# Four
-# tokens used
-# 6,060
-```
-
-✅ **Success indicators:**
-- Shows `provider: litellm-gateway` (NOT `openai`)
-- Shows `model: gpt-4o`
-- Returns answer without reconnecting errors
-- Shows `tokens used` count
-
-❌ **Common errors:**
-```bash
-# ERROR: Reconnecting... 1/5
-# ERROR: 401 Unauthorized: No api key passed in
-# → Your http_headers in config is missing or wrong
-# → Run ./install.sh again or edit ~/.codex/config.toml
-
-# ERROR: Not inside a trusted directory
-# → Run from a git repository or use:
-#   codex -c 'model_provider="litellm-gateway"' -c 'model="gpt-4o"' exec --skip-git-repo-check "test"
-
-# Shows "provider: openai" instead of "litellm-gateway"
-# → You forgot to use codex-gateway or the -c flags
-# → Use: codex-gateway exec "test"
-```
-
-#### Test 3: Verify Both Methods Use Same Gateway
-
-```bash
-# Terminal 1: Watch gateway logs in real-time
-aws logs tail /ecs/codex-litellm-gateway --follow --region us-west-2 --profile <your-profile>
-
-# Terminal 2: Test Method 1 (curl)
-curl -X POST "http://<gateway-url>/v1/chat/completions" \
-  -H "Authorization: Bearer $OPENAI_API_KEY" \
-  -H "Content-Type: application/json" \
-  -d '{"model":"gpt-4o","messages":[{"role":"user","content":"test curl"}]}'
-
-# Check logs → Should see: POST /v1/chat/completions HTTP/1.1 200 OK
-
-# Terminal 2: Test Method 2 (Codex CLI)
-codex-gateway exec "test codex"
-
-# Check logs → Should see: POST /v1/responses HTTP/1.1 200 OK
-```
-
-✅ **Success:** Both requests appear in the same gateway logs with `200 OK` status
-
----
-
-### Quick Reference
-
-| What | Command | Where It Goes |
-|------|---------|---------------|
-| **curl** | `curl -H "Authorization: Bearer $OPENAI_API_KEY" ...` | → Gateway `/v1/chat/completions` ✅ |
-| **codex-gateway** | `codex-gateway exec "..."` | → Gateway `/v1/responses` ✅ |
-| **codex with flags** | `codex -c model_provider="litellm-gateway" ...` | → Gateway `/v1/responses` ✅ |
-| **plain codex** ❌ | `codex` | → `api.openai.com` ❌ (NOT your gateway!) |
-
----
-
-## API Key Expiration & Auto-Refresh
-
-### Do API Keys Expire?
-
-**By default: NO.** API keys are long-lived and do not expire unless configured by admin.
-
-```bash
-# Developer workflow:
-# 1. Get key once from OIDC portal or admin
-# 2. Add to ~/.zshrc or ~/.bashrc
-# 3. Use for months/years without re-authenticating
-# 4. No refresh needed - it just works
-```
-
-### Optional: Admin-Configured Expiration
-
-Admins can optionally set key expiration when creating keys:
-
-```bash
-# Admin creates key with 90-day expiration
-curl -X POST "$GATEWAY_URL/key/generate" \
-  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
-  -d '{
-    "key_alias": "user-alice@company.com",
-    "duration": "90d"  # Key expires after 90 days
-  }'
-```
-
-**If your organization uses expiring keys**, developers will need to regenerate periodically:
-
-```bash
-# When key expires (get error: "API key expired or invalid")
-
-# Option 1: Use bundled refresh script (easiest)
-cd codex-gateway-config/
-./refresh-key.sh
-# Opens browser, prompts for new key, updates profile automatically
-
-# Option 2: Manual refresh
-open https://<gateway-url>/sso/key/generate
-# Copy new key
-export OPENAI_API_KEY=sk-litellm-new-xxxxxxxxxxxxx
-# Edit ~/.zshrc or ~/.bashrc with new key
-```
-
-### Auto-Refresh Script (If Expiration Enabled)
-
-If your admin configured expiring keys, here's a helper script to auto-refresh:
-
-**Save as `~/.local/bin/refresh-codex-key.sh`:**
-
-```bash
-#!/bin/bash
-# Auto-refresh Codex API key via OIDC portal
-# Run this when you get "API key expired" errors
-
-GATEWAY_URL="https://<gateway-url>"
-PROFILE_FILE="$HOME/.zshrc"  # Change to .bashrc for Linux
-
-echo "🔄 Refreshing Codex API key..."
-echo "Opening OIDC portal in browser..."
-
-# Open self-service portal
-open "$GATEWAY_URL/sso/key/generate" 2>/dev/null || \
-  xdg-open "$GATEWAY_URL/sso/key/generate" 2>/dev/null || \
-  echo "Please open: $GATEWAY_URL/sso/key/generate"
-
-echo ""
-echo "After authenticating:"
-echo "1. Copy the new API key from the portal"
-echo "2. Paste it below (input hidden for security)"
-echo ""
-
-# Prompt for new key
-read -s -p "New API key: " NEW_KEY
-echo ""
-
-if [[ ! $NEW_KEY =~ ^sk-litellm- ]]; then
-    echo "❌ Invalid key format. Expected: sk-litellm-..."
-    exit 1
-fi
-
-# Update shell profile
-if grep -q "export OPENAI_API_KEY=" "$PROFILE_FILE"; then
-    # Replace existing key
-    sed -i.bak "s|export OPENAI_API_KEY=.*|export OPENAI_API_KEY=$NEW_KEY|g" "$PROFILE_FILE"
-    echo "✅ Updated $PROFILE_FILE"
-else
-    # Append new key
-    echo "export OPENAI_API_KEY=$NEW_KEY" >> "$PROFILE_FILE"
-    echo "✅ Added to $PROFILE_FILE"
-fi
-
-# Export for current shell
-export OPENAI_API_KEY=$NEW_KEY
-
-echo "✅ API key refreshed!"
-echo ""
-echo "Test with: curl -X POST \"$GATEWAY_URL/v1/chat/completions\" \\"
-echo "  -H \"Authorization: Bearer \$OPENAI_API_KEY\" \\"
-echo "  -d '{\"model\":\"gpt-4o\",\"messages\":[{\"role\":\"user\",\"content\":\"Hi\"}]}'"
-```
-
-**Usage:**
-
-```bash
-# Make executable
-chmod +x ~/.local/bin/refresh-codex-key.sh
-
-# Run when key expires
-refresh-codex-key.sh
-```
-
-### Alternative: Periodic Refresh via Cron (Advanced)
-
-For fully automated refresh (requires headless OIDC flow - not standard):
-
-```bash
-# Add to crontab (runs every 85 days for 90-day keys)
-# Note: This requires machine OIDC credentials, not typical for developer setups
-0 0 */85 * * ~/.local/bin/refresh-codex-key.sh
-```
-
-**Warning:** This approach requires:
-- Service account with OIDC credentials (not personal SSO)
-- Headless OAuth2 flow (client credentials grant)
-- Most enterprises won't support this for individual developers
-
-### Recommended Approach
-
-**For most organizations:**
-1. **Don't set key expiration** - let keys be long-lived
-2. **Revoke keys via IdP offboarding** - when employee leaves, their OIDC identity is disabled, admin can query and revoke their keys
-3. **Developers set key once** - add to shell profile and forget about it
-
-**If you must use expiring keys:**
-- Set expiration to 365 days (annual refresh)
-- Send email notification 7 days before expiry
-- Developers run refresh script when needed
+**What the alias does:**
+1. Uses custom provider "litellm-gateway" (from `~/.codex/config.toml`)
+2. Uses model "openai.gpt-5.4" (or whatever model was set during `cxwb init`)
+3. Sends requests to: `http://<gateway-url>/v1`
+4. Includes Authorization header with your API key
+
+**Where it's created:** The `install.sh` script adds the alias to your shell profile (`~/.zshrc` or `~/.bashrc`), so it's available in all new terminal sessions after you run `source ~/.zshrc` (or restart your shell).
 
 ---
 
