@@ -12,7 +12,8 @@ Three deployment patterns, in recommended order. Choose the first one your organ
 |------------|-----------|-----------|-----------|
 | **Authentication** | SAML → IdC | OIDC → Gateway | OIDC → Gateway |
 | **IAM Identity Center Required?** | ✅ Yes | ❌ No | ❌ No |
-| **Codex Provider** | `amazon-bedrock` | `openai` | `openai` |
+| **Codex CLI Config** | `amazon-bedrock` (native) | `openai` (via gateway) | `openai` (via gateway) |
+| **Backend** | Amazon Bedrock | Amazon Bedrock | Amazon Bedrock |
 | **Developer Command** | `aws sso login` | `export OPENAI_API_KEY=...` | Same as Pattern 2 |
 | **Per-user CloudTrail Audit** | ✅ Native | ✅ Gateway logs | ✅ Gateway logs |
 | **Soft Alerts (CloudWatch)** | ✅ Yes | ✅ Yes | ✅ Yes |
