@@ -122,8 +122,6 @@ Corporate IdP (Okta/Azure) → SAML → IAM Identity Center → AWS credentials 
 
 ## Pattern 2 — Governed Gateway
 
-> **"Central control over who uses which models, how much, and at what cost — with hard enforcement."**
-
 ### Who This Is For
 
 - ✅ Organizations that need hard per-user/per-team budget limits
@@ -202,8 +200,6 @@ Corporate IdP (Okta/Azure) → OIDC/JWT → JWT Middleware → LiteLLM Gateway �
 ---
 
 ## Pattern 3 — Full Observability
-
-> **"Prove that AI coding is working. Measure adoption, productivity impact, and ROI across your engineering organization."**
 
 ### Who This Is For
 
