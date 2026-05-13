@@ -21,12 +21,6 @@ Corporate IdP (Okta/Azure) → OIDC → LiteLLM Gateway → Bedrock
                                Model routing/fallback
 ```
 
-
-**What Developers Get:**
-- Self-service API key from gateway portal
-- No AWS CLI or IdC required
-- OpenAI-compatible API format
-
 ---
 
 ## Prerequisites
