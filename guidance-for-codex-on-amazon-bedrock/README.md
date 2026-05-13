@@ -68,7 +68,7 @@ Question 1: Do you need HARD quota enforcement?
 
 ## Pattern 1 — Native AWS Access
 
-> **"Codex on Bedrock with corporate SSO. No API keys, no custom binaries, deployed in an afternoon."**
+> **"Codex on Bedrock with corporate SSO. No API keys, no custom binaries."**
 
 ### Who This Is For
 
