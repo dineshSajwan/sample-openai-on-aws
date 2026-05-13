@@ -166,15 +166,6 @@ This guidance uses **LiteLLM** deployed on ECS Fargate — open source, OpenAI-c
 
 **→ [QUICKSTART_PATTERN_GATEWAY.md](QUICKSTART_PATTERN_GATEWAY.md)**
 
-**Prerequisites:**
-- AWS account with ECS, VPC, and ALB permissions
-- Amazon Bedrock activated in target regions
-- Docker installed (for building LiteLLM image)
-- Python 3.10-3.13 + uv package manager
-- (Optional) Identity provider with OIDC support for self-service (Okta, Azure AD, Auth0, Cognito)
-
-**Deployment time:** 15-20 minutes (add 30 min for OIDC setup)
-
 ---
 
 ## Pattern 3 — Full Observability
