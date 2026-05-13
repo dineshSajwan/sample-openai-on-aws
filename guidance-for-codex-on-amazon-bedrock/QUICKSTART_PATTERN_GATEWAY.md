@@ -49,7 +49,13 @@ Corporate IdP (Okta/Azure) → OIDC → LiteLLM Gateway → Bedrock
 
 ### Option A: Wizard (Recommended)
 
-**Fastest deployment path:**
+**Four main commands:**
+1. `uv run cxwb init` — Configure deployment
+2. `uv run cxwb build` — Build Docker images  
+3. `uv run cxwb deploy` — Deploy infrastructure
+4. `uv run cxwb distribute` — Generate developer bundle
+
+**Full workflow:**
 
 ```bash
 # 1. Clone repo
