@@ -133,7 +133,7 @@ Corporate IdP (Okta/Azure) → SAML → IAM Identity Center → AWS credentials 
 
 Everything in Pattern 1, plus:
 
-- **OIDC self-service authentication** — Custom JWT middleware (no Enterprise license required, ~$6-10/month)
+- **OIDC self-service authentication** — Custom JWT middleware (no Enterprise license required)
 - **Hard budget enforcement** — Gateway blocks requests when quota exceeded
 - **Per-user and per-team token budgets** — Configurable via LiteLLM
 - **Rate limiting** — Requests per minute (RPM) and tokens per minute (TPM)
@@ -154,7 +154,7 @@ Corporate IdP (Okta/Azure) → OIDC/JWT → JWT Middleware → LiteLLM Gateway �
 
 **Authentication Options:**
 1. **Admin-Generated Keys** (simplest) — Admin creates keys via LiteLLM UI, shares with developers
-2. **OIDC Self-Service** (scalable) — Developers generate keys via SSO portal using custom JWT middleware (~$6-10/month additional cost, no Enterprise license)
+2. **OIDC Self-Service** (scalable) — Developers generate keys via SSO portal using custom JWT middleware (no Enterprise license required)
 
 ### Gateway Options
 
@@ -195,7 +195,7 @@ Corporate IdP (Okta/Azure) → OIDC/JWT → JWT Middleware → LiteLLM Gateway �
 
 **Cost:** 
 - Base: ~$100-150/month (ECS Fargate + ALB + RDS)
-- With OIDC: +$6-10/month (JWT middleware + DynamoDB)
+- With OIDC: Additional DynamoDB and Lambda costs (minimal)
 
 ---
 
