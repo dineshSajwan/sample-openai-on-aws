@@ -475,15 +475,15 @@ aws logs tail /ecs/litellm --follow --region us-west-2 --filter-pattern "jwt-mid
 
 ---
 
-##### Cost Breakdown
+##### Additional AWS Services
 
-**Additional AWS services (compared to admin-generated keys):**
+**Required for OIDC self-service (compared to admin-generated keys):**
 
-| Service | Monthly Cost | Purpose |
-|---------|-------------|---------|
-| DynamoDB table | ~$1-5 | User→key mapping cache |
-| ECS task (JWT middleware) | Minimal | +0.25 vCPU, +512MB RAM |
-| ECR storage | Minimal | +100MB for middleware image |
+| Service | Purpose |
+|---------|---------|
+| DynamoDB table | User→key mapping cache |
+| ECS task (JWT middleware) | JWT validation (+0.25 vCPU, +512MB RAM) |
+| ECR storage | Middleware container image (~100MB) |
 
 ---
 
