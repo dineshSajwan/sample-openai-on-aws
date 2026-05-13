@@ -145,22 +145,28 @@ codex-gateway-config/
 unzip codex-gateway-config.zip
 cd codex-gateway-config/
 
-# 2. Run installer
+# 2. Get API key from admin
+# Admin can generate keys via LiteLLM UI or distribute existing keys
+
+# 3. Run installer (will prompt for API key)
 ./install.sh
 
-# This:
-# - Appends managed blocks to ~/.codex/config.toml
-# - Creates ~/.codex/gateway-env template
+# The installer will:
+# - Prompt for your LiteLLM Gateway API key (starts with sk-litellm-)
+# - Validate the key format
+# - Configure ~/.codex/config.toml with the key
+# - Add codex-gateway alias to your shell profile
+# - Remove any conflicting OpenAI authentication
 ```
 
 ### Getting API Key - Two Options
 
 Choose based on your organization's needs:
 
-| Option | Setup Time | Cost | Best For |
-|--------|-----------|------|----------|
-| **Option A: Admin-Generated Keys** | 5 min | $0/month | Small teams, quick start, simple workflow |
-| **Option B: OIDC Self-Service** | 1-2 hours | ~$6-10/month | Large teams, self-service, SSO integration |
+| Option | Setup Time | Best For |
+|--------|-----------|----------|
+| **Option A: Admin-Generated Keys** | 5 min | Small teams, quick start, simple workflow |
+| **Option B: OIDC Self-Service** | 1-2 hours | Large teams, self-service, SSO integration |
 
 ---
 
@@ -202,9 +208,7 @@ source ~/.bashrc # Linux
 
 #### Option B: Self-Service OIDC Portal (Custom JWT Middleware)
 
-**✅ NOW AVAILABLE** - Uses custom JWT middleware (no Enterprise license required!)
-
-**Cost:** ~$6-10/month additional AWS costs vs ~$500-2000+/month for LiteLLM Enterprise
+**✅ NOW AVAILABLE** - Uses custom JWT middleware
 
 **Architecture:**
 ```
@@ -478,11 +482,8 @@ aws logs tail /ecs/litellm --follow --region us-west-2 --filter-pattern "jwt-mid
 | Service | Monthly Cost | Purpose |
 |---------|-------------|---------|
 | DynamoDB table | ~$1-5 | User→key mapping cache |
-| ECS task (JWT middleware) | ~$5 | +0.25 vCPU, +512MB RAM |
-| ECR storage | ~$0.01 | +100MB for middleware image |
-| **Total** | **~$6-10/month** | vs. $500-2000+/month Enterprise |
-
-**Break-even:** If you have more than 1-2 developers, OIDC self-service saves admin time and pays for itself.
+| ECS task (JWT middleware) | Minimal | +0.25 vCPU, +512MB RAM |
+| ECR storage | Minimal | +100MB for middleware image |
 
 ---
 
@@ -492,7 +493,6 @@ If you need advanced features not in custom middleware:
 
 | Feature | Custom JWT Middleware | LiteLLM Enterprise |
 |---------|----------------------|-------------------|
-| **Cost** | ~$6-10/month | ~$500-2000+/month |
 | **Setup** | 1-2 hours | 1 hour |
 | **OIDC/SSO** | ✅ Basic | ✅ Advanced (roles, RBAC) |
 | **Key Management** | ✅ Auto-generation | ✅ Advanced policies |
