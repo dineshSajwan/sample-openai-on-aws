@@ -13,20 +13,20 @@ IdC uses SigV4 over AWS SSO; Gateway uses a bearer key over HTTPS. Choose based 
 
 ```bash
 cd source/
-poetry install
-poetry run cxwb --help
+uv sync
+uv run cxwb --help
 ```
 
-Prerequisites: Python 3.10–3.13, [Poetry](https://python-poetry.org/), AWS CLI v2 authenticated to an account with the required permissions, and Bedrock activated in your target region.
+Prerequisites: Python 3.10–3.13, [uv](https://docs.astral.sh/uv/getting-started/installation/), AWS CLI v2 authenticated to an account with the required permissions, and Bedrock activated in your target region.
 
 ## Flow
 
 ```bash
-poetry run cxwb init                  # pick path, answer prompts, save profile
-poetry run cxwb deploy --profile <n>  # create CloudFormation stacks
-poetry run cxwb status --profile <n>  # show stack states
-poetry run cxwb distribute --profile <n> --bucket my-bucket    # one bundle per deployment
-poetry run cxwb destroy --profile <n> # tear it all down
+uv run cxwb init                  # pick path, answer prompts, save profile
+uv run cxwb deploy --profile <n>  # create CloudFormation stacks
+uv run cxwb status --profile <n>  # show stack states
+uv run cxwb distribute --profile <n> --bucket my-bucket    # one bundle per deployment
+uv run cxwb destroy --profile <n> # tear it all down
 ```
 
 Profiles are saved to `~/.cxwb/profiles/<name>.json` as plain JSON, safe to inspect or edit manually.

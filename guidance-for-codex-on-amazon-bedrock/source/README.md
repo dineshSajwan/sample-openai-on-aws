@@ -10,8 +10,8 @@ Guided deploy + bundle generator for the four shapes this repo supports:
 Install:
 
 ```bash
-poetry install
-poetry run cxwb --help
+uv sync
+uv run cxwb --help
 ```
 
 Commands: `init`, `deploy`, `status`, `distribute`, `destroy`, `list`.

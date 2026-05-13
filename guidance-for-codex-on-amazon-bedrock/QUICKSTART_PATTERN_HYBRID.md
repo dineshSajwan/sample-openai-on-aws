@@ -102,10 +102,10 @@ aws cloudwatch get-metric-statistics \
 cd source/
 
 # Check existing profile
-poetry run cxwb status --profile codex-gateway
+uv run cxwb status --profile codex-gateway
 
 # Add analytics to existing deployment
-poetry run cxwb analytics deploy --profile codex-gateway
+uv run cxwb analytics deploy --profile codex-gateway
 
 # This deploys:
 # 1. codex-analytics-pipeline (Kinesis + S3 + Glue + Lambda)

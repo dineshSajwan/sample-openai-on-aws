@@ -39,7 +39,7 @@ Corporate IdP (Okta/Azure) → OIDC → LiteLLM Gateway → Bedrock
   - Environment variables (`AWS_ACCESS_KEY_ID`, `AWS_SECRET_ACCESS_KEY`)
   - Credentials file (`~/.aws/credentials`)
   - AWS SSO profile
-- [ ] Python 3.10-3.13 + Poetry ([install poetry](https://python-poetry.org/docs/#installation))
+- [ ] Python 3.10-3.13 + uv ([install uv](https://docs.astral.sh/uv/getting-started/installation/))
 - [ ] Docker installed and running (for building LiteLLM container image)
 
 ### Optional (For OIDC Self-Service)
@@ -64,10 +64,10 @@ cd guidance-for-codex-on-aws/guidance-for-codex-on-amazon-bedrock
 
 # 2. Install CLI
 cd source/
-poetry install
+uv sync
 
 # 3. Run wizard
-poetry run cxwb init
+uv run cxwb init
 
 # Select: Gateway path
 # Answer prompts:
@@ -90,10 +90,10 @@ poetry run cxwb init
 
 # 4. Build Docker images
 # If OIDC enabled, build JWT middleware first:
-poetry run cxwb build-jwt --profile <profile-name>  # Only if OIDC enabled
+uv run cxwb build-jwt --profile <profile-name>  # Only if OIDC enabled
 
 # Build LiteLLM image:
-poetry run cxwb build --profile <profile-name>
+uv run cxwb build --profile <profile-name>
 
 # This:
 # - Builds multi-arch Docker images (ARM64 + x86_64)
@@ -102,7 +102,7 @@ poetry run cxwb build --profile <profile-name>
 # - Updates profile with image URIs
 
 # 5. Deploy infrastructure
-poetry run cxwb deploy --profile  <profile-name>
+uv run cxwb deploy --profile  <profile-name>
 
 # This deploys stacks in order:
 # 1. codex-otel-networking (VPC, subnets, NAT gateway)
@@ -116,7 +116,7 @@ poetry run cxwb deploy --profile  <profile-name>
 # - If OIDC enabled: Self-service portal at http://<alb-url>/api/my-key
 
 # 6. Generate developer bundle
-poetry run cxwb distribute --profile <profile-name> --bucket my-bucket
+uv run cxwb distribute --profile <profile-name> --bucket my-bucket
 
 # Output: S3 presigned URL
 ```
@@ -231,7 +231,7 @@ LiteLLM Gateway → Bedrock
 
 ```bash
 cd guidance-for-codex-on-amazon-bedrock/source
-poetry run cxwb init
+uv run cxwb init
 
 # Select: LiteLLM Gateway — deploy new
 # When asked "Enable OIDC/SSO self-service?"
@@ -247,7 +247,7 @@ poetry run cxwb init
 
 ```bash
 # Build and push JWT middleware Docker image to ECR
-poetry run cxwb build-jwt --profile <profile-name>
+uv run cxwb build-jwt --profile <profile-name>
 
 # This:
 # - Builds image from deployment/litellm/jwt-middleware/
@@ -259,13 +259,13 @@ poetry run cxwb build-jwt --profile <profile-name>
 **Step 3: Build LiteLLM Image (as usual)**
 
 ```bash
-poetry run cxwb build --profile <profile-name>
+uv run cxwb build --profile <profile-name>
 ```
 
 **Step 4: Deploy Infrastructure**
 
 ```bash
-poetry run cxwb deploy --profile <profile-name>
+uv run cxwb deploy --profile <profile-name>
 
 # This deploys (in order):
 # 1. Networking stack (VPC, subnets)
@@ -939,7 +939,7 @@ aws iam attach-role-policy \
 
 **Symptom:**
 ```bash
-poetry run cxwb build --profile <profile-name>
+uv run cxwb build --profile <profile-name>
 # Error: failed to connect to docker API
 ```
 
@@ -964,8 +964,8 @@ jq --arg ip "$MY_IP/32" '.allowed_cidr = $ip' <profile>.json > tmp.json && mv tm
 
 # Redeploy
 cd guidance-for-codex-on-amazon-bedrock/source
-poetry run cxwb destroy --profile <profile> --yes
-poetry run cxwb deploy --profile <profile>
+uv run cxwb destroy --profile <profile> --yes
+uv run cxwb deploy --profile <profile>
 ```
 
 ### Issue 6: Model Identifier Invalid
@@ -982,7 +982,7 @@ aws bedrock list-foundation-models --region us-west-2 \
 
 # Update deployment/litellm/litellm_config.yaml with correct IDs
 # Rebuild and redeploy
-poetry run cxwb build && poetry run cxwb deploy
+uv run cxwb build && uv run cxwb deploy
 ```
 
 ### Issue 7: Authentication Error - Malformed API Key
@@ -999,7 +999,7 @@ poetry run cxwb build && poetry run cxwb deploy
 
 **Cause:** Image built for wrong architecture (ARM vs x86)
 
-**Fix:** Rebuild with multi-arch (default): `poetry run cxwb build --profile <profile>`
+**Fix:** Rebuild with multi-arch (default): `uv run cxwb build --profile <profile>`
 
 ### Issue 9: IP Changed, Gateway Unreachable
 

@@ -25,7 +25,7 @@ Corporate IdP (Okta/Azure) → SAML → IAM Identity Center → AWS credentials 
 - [ ] AWS account with admin permissions (IAM, CloudFormation, Identity Center)
 - [ ] Amazon Bedrock activated in target region (e.g., `us-west-2`)
 - [ ] AWS CLI v2 installed ([download](https://aws.amazon.com/cli/))
-- [ ] Python 3.10-3.13 + Poetry ([install poetry](https://python-poetry.org/docs/#installation))
+- [ ] Python 3.10-3.13 + uv ([install uv](https://docs.astral.sh/uv/getting-started/installation/))
 - [ ] Identity provider with SAML 2.0 support (Okta, Azure AD, Auth0, Google Workspace)
 
 ### IdP-Specific Guides
@@ -51,10 +51,10 @@ cd guidance-for-codex-on-aws/guidance-for-codex-on-amazon-bedrock
 
 # 2. Install CLI
 cd source/
-poetry install
+uv sync
 
 # 3. Run wizard (select "IAM Identity Center" path)
-poetry run cxwb init
+uv run cxwb init
 
 # Answer prompts:
 # - Deployment path? → IAM Identity Center
@@ -68,7 +68,7 @@ poetry run cxwb init
 # - Profile name? → codex-bedrock
 
 # 4. Deploy CloudFormation stack
-poetry run cxwb deploy --profile codex-bedrock
+uv run cxwb deploy --profile codex-bedrock
 
 # This creates:
 # - IAM role: BedrockInvokeRole
@@ -96,7 +96,7 @@ poetry run cxwb deploy --profile codex-bedrock
 
 ```bash
 # 6. Generate developer bundle
-poetry run cxwb distribute --profile codex-bedrock --bucket my-distribution-bucket
+uv run cxwb distribute --profile codex-bedrock --bucket my-distribution-bucket
 
 # Output: S3 presigned URL valid for 7 days
 # Share this URL with developers
@@ -161,19 +161,19 @@ If you don't have an external IdP:
 ```bash
 # 1. Run wizard
 cd source/
-poetry install
-poetry run cxwb init
+uv sync
+uv run cxwb init
 
 # Select: IAM Identity Center path
 # Answer prompts with your IdC details from Step 1
 
 # 2. Deploy stack
-poetry run cxwb deploy --profile codex-bedrock
+uv run cxwb deploy --profile codex-bedrock
 
 # 3. Create permission set (see "AWS Console Steps" in Path A above)
 
 # 4. Generate developer bundle
-poetry run cxwb distribute --profile codex-bedrock --bucket my-bucket
+uv run cxwb distribute --profile codex-bedrock --bucket my-bucket
 ```
 
 ---

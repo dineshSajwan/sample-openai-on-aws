@@ -278,7 +278,7 @@ def run(
         click.echo("\n⚠️  Skipping S3 upload (no --bucket specified).")
         click.echo(f"\nBundle saved locally at: {zip_path}")
         click.echo(f"\nTo upload to S3 and generate a presigned URL:")
-        click.echo(f"  poetry run cxwb distribute --profile {profile_name} --bucket {suggested_bucket}")
+        click.echo(f"  uv run cxwb distribute --profile {profile_name} --bucket {suggested_bucket}")
         click.echo(f"\nThe bucket will be created automatically with:")
         click.echo(f"  • Versioning enabled")
         click.echo(f"  • Server-side encryption (AES256)")

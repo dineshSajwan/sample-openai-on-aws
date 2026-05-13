@@ -26,8 +26,8 @@ if ! aws ecs describe-clusters --clusters $CLUSTER_NAME --region $AWS_REGION --q
     echo ""
     echo "To deploy:"
     echo "  cd guidance-for-codex-on-amazon-bedrock/source"
-    echo "  poetry run cxwb build --profile codex-bedrock-gw"
-    echo "  poetry run cxwb deploy --profile codex-bedrock-gw"
+    echo "  uv run cxwb build --profile codex-bedrock-gw"
+    echo "  uv run cxwb deploy --profile codex-bedrock-gw"
     exit 1
 fi
 
@@ -103,7 +103,7 @@ for TASK_ARN in $TASKS; do
             echo ""
             echo "🔴 ARCHITECTURE MISMATCH DETECTED"
             echo "   Your Docker image was built for the wrong architecture."
-            echo "   Rebuild with: poetry run cxwb build --profile codex-bedrock-gw"
+            echo "   Rebuild with: uv run cxwb build --profile codex-bedrock-gw"
         fi
 
         if echo "$STOPPED_REASON" | grep -q "unable to pull secrets"; then

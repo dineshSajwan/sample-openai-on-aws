@@ -56,7 +56,7 @@ LiteLLM → Bedrock
 
 ```bash
 cd guidance-for-codex-on-amazon-bedrock/source
-poetry run cxwb init
+uv run cxwb init
 
 # When prompted:
 # - Enable OIDC/SSO? → Yes
@@ -68,7 +68,7 @@ poetry run cxwb init
 ### Step 2: Build JWT Middleware Image
 
 ```bash
-poetry run cxwb build-jwt --profile <profile-name>
+uv run cxwb build-jwt --profile <profile-name>
 
 # This:
 # - Builds Docker image from deployment/litellm/jwt-middleware/
@@ -80,13 +80,13 @@ poetry run cxwb build-jwt --profile <profile-name>
 ### Step 3: Build LiteLLM Image
 
 ```bash
-poetry run cxwb build --profile <profile-name>
+uv run cxwb build --profile <profile-name>
 ```
 
 ### Step 4: Deploy Infrastructure
 
 ```bash
-poetry run cxwb deploy --profile <profile-name>
+uv run cxwb deploy --profile <profile-name>
 
 # This deploys (in order):
 # 1. Networking stack (VPC, subnets)

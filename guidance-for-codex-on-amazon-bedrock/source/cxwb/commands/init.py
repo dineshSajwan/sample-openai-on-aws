@@ -246,6 +246,13 @@ def run() -> None:
     saved = profile.save(name, data)
     click.echo(f"\nSaved profile to {saved}")
     if data["manages_infra"]:
-        click.echo(f"Next: cxwb deploy --profile {name}")
+        # If auto_build is enabled, user needs to build image first
+        if data.get("auto_build"):
+            click.echo(f"Next: uv run cxwb build --profile {name}")
+        # If OIDC is enabled, user needs to build JWT middleware first
+        elif data.get("enable_oidc"):
+            click.echo(f"Next: uv run cxwb build-jwt --profile {name}")
+        else:
+            click.echo(f"Next: uv run cxwb deploy --profile {name}")
     else:
-        click.echo(f"Next: cxwb distribute --profile {name} --bucket <bucket>")
+        click.echo(f"Next: uv run cxwb distribute --profile {name} --bucket <bucket>")

@@ -60,12 +60,12 @@ git clone https://github.com/aws-samples/sample-openai-on-aws.git
 cd sample-openai-on-aws/guidance-for-codex-on-amazon-bedrock
 
 # Install wizard
-cd source/ && poetry install
+cd source/ && uv sync
 
 # Run guided deployment (choose your pattern below)
-poetry run cxwb init     # Choose pattern and answer prompts
-poetry run cxwb deploy   # Deploy infrastructure
-poetry run cxwb distribute --bucket my-bucket  # Generate developer bundle
+uv run cxwb init     # Choose pattern and answer prompts
+uv run cxwb deploy   # Deploy infrastructure
+uv run cxwb distribute --bucket my-bucket  # Generate developer bundle
 ```
 
 **After running `cxwb init`, follow the guide for your chosen pattern:**

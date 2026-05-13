@@ -12,7 +12,7 @@ SCRIPTS_DIR = REPO_ROOT / "deployment" / "scripts"
 if not INFRA_DIR.is_dir():
     raise RuntimeError(
         f"cxwb expects to run from the repo checkout; templates not found at {INFRA_DIR}. "
-        "Install with `poetry install` inside the repo, not `pip install cxwb` from a wheel."
+        "Install with `uv sync` inside the repo, not `pip install cxwb` from a wheel."
     )
 
 IDC_TEMPLATE = INFRA_DIR / "bedrock-auth-idc.yaml"

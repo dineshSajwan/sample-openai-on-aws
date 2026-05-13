@@ -345,10 +345,10 @@ All patterns can be deployed using the guided `cxwb` wizard:
 
 ```bash
 cd source/
-poetry install
-poetry run cxwb init                        # Pick pattern, answer prompts
-poetry run cxwb deploy --profile <name>     # Deploy CloudFormation stacks
-poetry run cxwb distribute --profile <name> # Generate developer bundles
+uv sync
+uv run cxwb init                        # Pick pattern, answer prompts
+uv run cxwb deploy --profile <name>     # Deploy CloudFormation stacks
+uv run cxwb distribute --profile <name> # Generate developer bundles
 ```
 
 **Supported deployment paths:**
