@@ -146,7 +146,7 @@ unzip codex-gateway-config.zip
 cd codex-gateway-config/
 
 # 2. Get API key from admin
-# Admin can generate keys via LiteLLM UI or distribute existing keys
+# See "Getting API Key - Two Options" section below for how to obtain your key
 
 # 3. Run installer (will prompt for API key)
 ./install.sh
