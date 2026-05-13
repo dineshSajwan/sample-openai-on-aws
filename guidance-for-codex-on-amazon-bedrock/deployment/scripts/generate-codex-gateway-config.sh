@@ -74,8 +74,39 @@ mv "$cfg.tmp" "$cfg"
 [[ -s "$cfg" && $(tail -c1 "$cfg") != "" ]] && printf '\n' >>"$cfg"
 cat "$here/config.toml.fragment" >>"$cfg"
 
-echo "Wrote managed block to $cfg"
-echo "Add OPENAI_API_KEY to your shell profile (see DEV-SETUP.md)."
+echo "✓ Wrote managed block to $cfg"
+
+# Remove OpenAI auth.json to prevent conflicts
+if [[ -f "$HOME/.codex/auth.json" ]]; then
+  mv "$HOME/.codex/auth.json" "$HOME/.codex/auth.json.backup.$(date +%s)"
+  echo "✓ Backed up existing auth.json (was pointing to api.openai.com)"
+fi
+
+# Detect shell and add alias
+SHELL_RC=""
+if [[ "$SHELL" == *"zsh"* ]]; then
+  SHELL_RC="$HOME/.zshrc"
+elif [[ "$SHELL" == *"bash"* ]]; then
+  SHELL_RC="$HOME/.bashrc"
+fi
+
+if [[ -n "$SHELL_RC" ]]; then
+  if ! grep -q "alias codex-gateway=" "$SHELL_RC" 2>/dev/null; then
+    echo "" >> "$SHELL_RC"
+    echo "# Codex CLI alias for LiteLLM Gateway" >> "$SHELL_RC"
+    echo 'alias codex-gateway='"'"'codex -c model_provider="litellm-gateway" -c model="gpt-4o"'"'"'' >> "$SHELL_RC"
+    echo "✓ Added 'codex-gateway' alias to $SHELL_RC"
+  else
+    echo "✓ Alias 'codex-gateway' already exists in $SHELL_RC"
+  fi
+fi
+
+echo ""
+echo "Next steps:"
+echo "  1. Set your API key: export OPENAI_API_KEY=sk-litellm-xxxxx"
+echo "  2. Add to shell profile for persistence (see DEV-SETUP.md)"
+echo "  3. Reload shell: source $SHELL_RC"
+echo "  4. Test: codex-gateway exec 'Say hello'"
 INSTALL
 chmod +x "$OUTDIR/install.sh"
 
@@ -86,7 +117,26 @@ cfg="$HOME/.codex/config.toml"
 [[ -f "$cfg" ]] || exit 0
 awk '/# >>> end codex-gateway managed/{skip=0; next} /# >>> codex-gateway managed/{skip=1} !skip{print}' "$cfg" >"$cfg.tmp"
 mv "$cfg.tmp" "$cfg"
-echo "Removed managed block from $cfg"
+echo "✓ Removed managed block from $cfg"
+
+# Remove alias from shell rc files
+for rc in "$HOME/.zshrc" "$HOME/.bashrc"; do
+  if [[ -f "$rc" ]] && grep -q "alias codex-gateway=" "$rc"; then
+    # Remove the alias line and the comment line above it
+    sed -i.bak '/# Codex CLI alias for LiteLLM Gateway/d; /alias codex-gateway=/d' "$rc"
+    echo "✓ Removed 'codex-gateway' alias from $rc"
+  fi
+done
+
+# Restore auth.json if it was backed up
+if [[ -f "$HOME/.codex/auth.json.backup."* ]]; then
+  latest_backup=$(ls -t "$HOME/.codex/auth.json.backup."* | head -1)
+  mv "$latest_backup" "$HOME/.codex/auth.json"
+  echo "✓ Restored auth.json from backup"
+fi
+
+echo ""
+echo "Uninstall complete. Restart your shell to apply changes."
 UNINSTALL
 chmod +x "$OUTDIR/uninstall.sh"
 
@@ -194,6 +244,8 @@ python test_gateway.py
 
 ## Method 2: OpenAI Codex CLI
 
+**Note:** The install script automatically creates a \`codex-gateway\` alias for you!
+
 ### Setup
 
 \`\`\`bash
@@ -201,50 +253,58 @@ python test_gateway.py
 npm install -g @openai/codex
 # Or: brew install --cask codex
 
+# Run the installer (already did this in step 2)
+# This creates ~/.codex/config.toml and adds the codex-gateway alias
+
 # Set API key
 export OPENAI_API_KEY="sk-litellm-xxxxxxxxxxxxx"
 
 # Add to shell profile for persistence
 echo 'export OPENAI_API_KEY="sk-litellm-xxxxxxxxxxxxx"' >> ~/.zshrc  # macOS
 echo 'export OPENAI_API_KEY="sk-litellm-xxxxxxxxxxxxx"' >> ~/.bashrc # Linux
+
+# Reload shell to activate alias
+source ~/.zshrc  # or source ~/.bashrc
 \`\`\`
 
 ### Usage
 
+**With the alias (recommended):**
+
 \`\`\`bash
-# Launch Codex CLI (interactive mode)
-codex -c 'model_provider="litellm-gateway"' -c 'model="$MODEL"'
-
-# Or create an alias for convenience
-echo 'alias codex-gateway=\"codex -c model_provider=\\\"litellm-gateway\\\" -c model=\\\"$MODEL\\\"\"' >> ~/.zshrc
-source ~/.zshrc
-
-# Now just run
+# Interactive mode
 codex-gateway
+
+# One-shot commands
+codex-gateway exec "Write a Python function to calculate fibonacci"
+codex-gateway exec "Explain the purpose of this file" @README.md
+
+# Chat mode
+codex-gateway chat "How do I parse JSON in Python?"
 \`\`\`
 
-### One-Shot Commands
+**Without the alias (manual flags):**
 
 \`\`\`bash
-# Execute a single command
-codex exec -c 'model_provider="litellm-gateway"' -c 'model="$MODEL"' "Write a Python function to calculate fibonacci"
-
-# With alias
-codex-gateway exec "Explain the purpose of this file" @README.md
+# If you prefer not to use the alias
+codex -c 'model_provider="litellm-gateway"' -c 'model="$MODEL"' exec "your prompt"
 \`\`\`
 
 ### Verification
 
-When you launch Codex, check the status bar shows:
-\`\`\`
-OpenAI Codex v0.130.0
---------
-model: $MODEL
-provider: litellm-gateway
---------
+To confirm Codex is using your gateway, run:
+
+\`\`\`bash
+codex-gateway exec "Say hi" 2>&1 | head -15
 \`\`\`
 
-If it shows \`provider: openai\`, you forgot the \`-c\` flag!
+You should see:
+\`\`\`
+model: $MODEL
+provider: litellm-gateway
+\`\`\`
+
+**Note:** The interactive TUI may not always show the provider line in the status bar, but the command-line output will confirm it's using your gateway.
 
 ---
 

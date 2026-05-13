@@ -512,29 +512,57 @@ If you need advanced features not in custom middleware:
 - IdP Setup Guides: Okta, Azure AD, Auth0 examples
 - Advanced Topics: Redis caching, rate limiting, RBAC
 
-### Using Codex with Gateway
+### Using Codex CLI with Gateway
+
+**The install script automatically creates a `codex-gateway` alias for you!**
 
 ```bash
-# Launch Codex
-codex
+# Interactive mode
+codex-gateway
+
+# One-shot commands (recommended for testing)
+codex-gateway exec "Write a Python hello world function"
+codex-gateway exec "Explain this file" @README.md
+
+# Chat mode
+codex-gateway chat "How do I parse JSON in Python?"
+```
+
+**How it works:**
+
+```bash
+# The codex-gateway alias runs:
+codex -c 'model_provider="litellm-gateway"' -c 'model="gpt-4o"'
 
 # Codex reads ~/.codex/config.toml:
-# - model_provider = "openai"
+# - model_provider = "litellm-gateway"
 # - model = "gpt-4o"  (maps to Bedrock model in gateway)
-# - [openai]
-# - base_url = "https://<gateway-url>/v1"
-# - (api_key read from $OPENAI_API_KEY)
+# - [model_providers.litellm-gateway]
+# - base_url = "http://<gateway-url>/v1"
+# - api_key = "sk-litellm-..." (or env:OPENAI_API_KEY)
 
 # Codex sends request to gateway with Bearer token
 # Gateway validates API key, checks quota, forwards to Bedrock
 # Response streams back through gateway to Codex
 ```
 
-### Test Your Setup
+**Verification:**
 
 ```bash
-# Quick test with curl
-curl -X POST "https://<gateway-url>/v1/chat/completions" \
+# Check that Codex is using your gateway (not OpenAI's API)
+codex-gateway exec "Say hi" 2>&1 | head -15
+
+# You should see:
+# model: gpt-4o
+# provider: litellm-gateway
+```
+
+### Test Your Setup
+
+**Method 1: Using curl (API test)**
+
+```bash
+curl -X POST "http://<gateway-url>/v1/chat/completions" \
   -H "Authorization: Bearer $OPENAI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
@@ -543,7 +571,27 @@ curl -X POST "https://<gateway-url>/v1/chat/completions" \
   }'
 
 # Expected: JSON response with AI-generated message
-# If this works, Codex will work too!
+```
+
+**Method 2: Using Codex CLI**
+
+```bash
+codex-gateway exec "What is 2+2? Answer in one word"
+
+# Expected: "four" (or similar response)
+```
+
+**Verify both methods use the same gateway:**
+
+```bash
+# Terminal 1: Watch gateway logs
+aws logs tail /ecs/codex-litellm-gateway --follow --region us-west-2
+
+# Terminal 2: Test both methods
+curl -X POST "http://<gateway-url>/v1/chat/completions" ...
+codex-gateway exec "test"
+
+# You should see both requests in the logs!
 ```
 
 ---
