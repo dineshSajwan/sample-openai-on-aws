@@ -269,6 +269,34 @@ def run(
         url = _upload_and_presign(zip_path, bucket, region, expires, profile_name)
         click.echo(f"\n✓ Presigned URL (expires in {expires}s):\n{url}")
         click.echo(f"\nShare this URL with developers to download the bundle.")
+
+    # Show admin access instructions for gateway deployments
+    if p["auth"] == "gateway" and p["manages_infra"]:
+        gateway_url = _gateway_endpoint_from_stack(p)
+        base_url = gateway_url.rstrip("/v1")
+
+        click.echo("\n" + "="*70)
+        click.echo("📊 ADMIN ACCESS TO LITELLM DASHBOARD")
+        click.echo("="*70)
+        click.echo(f"\nDashboard URL: {base_url}/ui")
+        click.echo("\nTo retrieve the master key:")
+        click.echo(f"  aws secretsmanager get-secret-value \\")
+        click.echo(f"    --region {region} \\")
+        click.echo(f"    --secret-id codex-litellm-master-key \\")
+        click.echo(f"    --query SecretString \\")
+        click.echo(f"    --output text")
+        click.echo("\nOr copy it directly to clipboard (macOS):")
+        click.echo(f"  aws secretsmanager get-secret-value \\")
+        click.echo(f"    --region {region} \\")
+        click.echo(f"    --secret-id codex-litellm-master-key \\")
+        click.echo(f"    --query SecretString \\")
+        click.echo(f"    --output text | pbcopy")
+        click.echo("\nThen:")
+        click.echo(f"  1. Open {base_url}/ui in your browser")
+        click.echo(f"  2. Login with the master key (starts with 'sk-')")
+        click.echo(f"  3. Navigate to 'Logs' or 'Analytics' to view usage")
+        click.echo("\n💡 Tip: To generate user API keys, navigate to 'Keys' section")
+        click.echo("="*70)
     else:
         # Generate suggested bucket name
         sts = boto3.client("sts")
