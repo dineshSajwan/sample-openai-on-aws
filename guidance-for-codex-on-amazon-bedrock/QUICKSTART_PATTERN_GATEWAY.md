@@ -512,6 +512,56 @@ If you need advanced features not in custom middleware:
 - IdP Setup Guides: Okta, Azure AD, Auth0 examples
 - Advanced Topics: Redis caching, rate limiting, RBAC
 
+### Configuration Reference
+
+After running `./install.sh` from the developer bundle, your `~/.codex/config.toml` will contain:
+
+```toml
+# Default model and provider
+model = "gpt-4o"
+model_provider = "litellm-gateway"
+
+# Custom provider definition
+[model_providers.litellm-gateway]
+name = "LiteLLM Gateway"              # Display name shown in Codex CLI
+type = "openai"                       # Protocol (OpenAI-compatible API)
+base_url = "http://your-gateway/v1"   # Your gateway endpoint URL
+api_key = "env:OPENAI_API_KEY"        # For curl/SDK (reads $OPENAI_API_KEY)
+http_headers = { Authorization = "Bearer sk-litellm-..." }  # For Codex CLI (embedded key)
+```
+
+**Field Explanations:**
+
+| Field | Purpose | Used By |
+|-------|---------|---------|
+| `model` | Default model alias to use | Codex CLI, curl/SDK |
+| `model_provider` | Which provider config to use | Codex CLI |
+| `name` | Human-readable provider name | Codex CLI UI |
+| `type` | API protocol format | Codex CLI (validates compatibility) |
+| `base_url` | Gateway endpoint (must end in `/v1`) | Codex CLI, curl/SDK |
+| `api_key` | Environment variable for API key | curl/SDK (reads from `$OPENAI_API_KEY`) |
+| `http_headers` | Explicit Authorization header | Codex CLI (workaround for bug) |
+
+**Why Two API Key Fields?**
+
+Codex CLI has a bug where it doesn't automatically send the `api_key` field as an Authorization header for custom providers. To work around this:
+
+- **`api_key = "env:OPENAI_API_KEY"`** → Used by curl and OpenAI SDK (reads from environment variable)
+- **`http_headers = { Authorization = "Bearer sk-..." }`** → Used by Codex CLI (embedded directly in config)
+
+**Getting Your API Key:**
+
+The install script prompts you for your API key during setup. If you need to get your key:
+
+1. **Contact your admin** for a LiteLLM API key (starts with `sk-litellm-...`)
+2. The admin can generate keys via:
+   - LiteLLM Dashboard: `http://<gateway-url>/ui` → "Keys" → "Generate Key"
+   - CLI: `litellm --master-key <master-key> --user <username> --budget <amount>`
+
+**Security Note:** The API key is embedded in your config file. Do not commit `~/.codex/config.toml` to version control. The install script hides your input when you type the key.
+
+---
+
 ### Using Codex CLI with Gateway
 
 **The install script automatically creates a `codex-gateway` alias for you!**
