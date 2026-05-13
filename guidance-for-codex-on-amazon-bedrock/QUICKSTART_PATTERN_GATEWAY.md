@@ -516,83 +516,173 @@ If you need advanced features not in custom middleware:
 
 **The install script automatically creates a `codex-gateway` alias for you!**
 
-```bash
-# Interactive mode
-codex-gateway
+#### Three Ways to Use Codex CLI
 
-# One-shot commands (recommended for testing)
+**Option 1: Using `codex-gateway` alias (⭐ Recommended)**
+
+```bash
+# One-shot commands
 codex-gateway exec "Write a Python hello world function"
 codex-gateway exec "Explain this file" @README.md
+
+# Interactive mode
+codex-gateway
 
 # Chat mode
 codex-gateway chat "How do I parse JSON in Python?"
 ```
 
-**How it works:**
+**Option 2: Using `codex` with explicit flags**
 
 ```bash
-# The codex-gateway alias runs:
+# Useful if you don't have the alias or want full control
+codex -c 'model_provider="litellm-gateway"' -c 'model="gpt-4o"' exec "your prompt"
+
+# Interactive
 codex -c 'model_provider="litellm-gateway"' -c 'model="gpt-4o"'
-
-# Codex reads ~/.codex/config.toml:
-# - model_provider = "litellm-gateway"
-# - model = "gpt-4o"  (maps to Bedrock model in gateway)
-# - [model_providers.litellm-gateway]
-# - base_url = "http://<gateway-url>/v1"
-# - api_key = "sk-litellm-..." (or env:OPENAI_API_KEY)
-
-# Codex sends request to gateway with Bearer token
-# Gateway validates API key, checks quota, forwards to Bedrock
-# Response streams back through gateway to Codex
 ```
 
-**Verification:**
+**Option 3: Plain `codex` ⚠️ DON'T USE THIS**
 
 ```bash
-# Check that Codex is using your gateway (not OpenAI's API)
-codex-gateway exec "Say hi" 2>&1 | head -15
-
-# You should see:
-# model: gpt-4o
-# provider: litellm-gateway
+codex  # ❌ This connects to api.openai.com, NOT your gateway!
+       # You'll see a sign-in prompt asking for OpenAI credentials
 ```
+
+**How the alias works:**
+
+```bash
+# The codex-gateway alias is just a shortcut:
+alias codex-gateway='codex -c model_provider="litellm-gateway" -c model="gpt-4o"'
+
+# It tells Codex to:
+# 1. Use custom provider "litellm-gateway" (from ~/.codex/config.toml)
+# 2. Use model "gpt-4o" (mapped by gateway to Bedrock model)
+# 3. Send requests to: http://<gateway-url>/v1
+# 4. Include Authorization header with your API key
+```
+
+---
 
 ### Test Your Setup
 
-**Method 1: Using curl (API test)**
+After running `./install.sh`, test both access methods to verify they route through your gateway.
+
+#### Test 1: Direct API Call (curl)
 
 ```bash
+# Set API key
+export OPENAI_API_KEY="sk-litellm-xxxxxxxxxxxxx"
+
+# Test with curl
 curl -X POST "http://<gateway-url>/v1/chat/completions" \
   -H "Authorization: Bearer $OPENAI_API_KEY" \
   -H "Content-Type: application/json" \
   -d '{
     "model": "gpt-4o",
-    "messages": [{"role": "user", "content": "Say hello!"}]
+    "messages": [{"role": "user", "content": "What is 2+2? Answer in one word"}]
   }'
 
-# Expected: JSON response with AI-generated message
+# Expected output:
+# {
+#   "id": "chatcmpl-...",
+#   "choices": [{
+#     "message": {
+#       "content": "Four",
+#       "role": "assistant"
+#     }
+#   }],
+#   "usage": {"total_tokens": 73, ...}
+# }
 ```
 
-**Method 2: Using Codex CLI**
+✅ **Success indicators:**
+- Returns JSON with `choices[0].message.content`
+- No errors about authentication
+- Response time ~2-3 seconds
+
+❌ **Common errors:**
+- `401 Unauthorized` → API key is wrong or not set
+- `Connection refused` → Gateway URL is wrong or gateway is down
+- `timeout` → Gateway is not accessible from your network
+
+#### Test 2: Codex CLI
 
 ```bash
+# Reload shell to activate alias
+source ~/.zshrc  # or ~/.bashrc
+
+# Test with codex-gateway alias
 codex-gateway exec "What is 2+2? Answer in one word"
 
-# Expected: "four" (or similar response)
+# Expected output:
+# OpenAI Codex v0.130.0
+# --------
+# model: gpt-4o
+# provider: litellm-gateway
+# --------
+# user
+# What is 2+2? Answer in one word
+# codex
+# Four
+# tokens used
+# 6,060
 ```
 
-**Verify both methods use the same gateway:**
+✅ **Success indicators:**
+- Shows `provider: litellm-gateway` (NOT `openai`)
+- Shows `model: gpt-4o`
+- Returns answer without reconnecting errors
+- Shows `tokens used` count
+
+❌ **Common errors:**
+```bash
+# ERROR: Reconnecting... 1/5
+# ERROR: 401 Unauthorized: No api key passed in
+# → Your http_headers in config is missing or wrong
+# → Run ./install.sh again or edit ~/.codex/config.toml
+
+# ERROR: Not inside a trusted directory
+# → Run from a git repository or use:
+#   codex -c 'model_provider="litellm-gateway"' -c 'model="gpt-4o"' exec --skip-git-repo-check "test"
+
+# Shows "provider: openai" instead of "litellm-gateway"
+# → You forgot to use codex-gateway or the -c flags
+# → Use: codex-gateway exec "test"
+```
+
+#### Test 3: Verify Both Methods Use Same Gateway
 
 ```bash
-# Terminal 1: Watch gateway logs
-aws logs tail /ecs/codex-litellm-gateway --follow --region us-west-2
+# Terminal 1: Watch gateway logs in real-time
+aws logs tail /ecs/codex-litellm-gateway --follow --region us-west-2 --profile <your-profile>
 
-# Terminal 2: Test both methods
-curl -X POST "http://<gateway-url>/v1/chat/completions" ...
-codex-gateway exec "test"
+# Terminal 2: Test Method 1 (curl)
+curl -X POST "http://<gateway-url>/v1/chat/completions" \
+  -H "Authorization: Bearer $OPENAI_API_KEY" \
+  -H "Content-Type: application/json" \
+  -d '{"model":"gpt-4o","messages":[{"role":"user","content":"test curl"}]}'
 
-# You should see both requests in the logs!
+# Check logs → Should see: POST /v1/chat/completions HTTP/1.1 200 OK
+
+# Terminal 2: Test Method 2 (Codex CLI)
+codex-gateway exec "test codex"
+
+# Check logs → Should see: POST /v1/responses HTTP/1.1 200 OK
 ```
+
+✅ **Success:** Both requests appear in the same gateway logs with `200 OK` status
+
+---
+
+### Quick Reference
+
+| What | Command | Where It Goes |
+|------|---------|---------------|
+| **curl** | `curl -H "Authorization: Bearer $OPENAI_API_KEY" ...` | → Gateway `/v1/chat/completions` ✅ |
+| **codex-gateway** | `codex-gateway exec "..."` | → Gateway `/v1/responses` ✅ |
+| **codex with flags** | `codex -c model_provider="litellm-gateway" ...` | → Gateway `/v1/responses` ✅ |
+| **plain codex** ❌ | `codex` | → `api.openai.com` ❌ (NOT your gateway!) |
 
 ---
 
