@@ -161,7 +161,31 @@ cd codex-gateway-config/
 # 4. Reload your shell
 source ~/.zshrc  # macOS
 source ~/.bashrc # Linux
+
+# 5. Verify the alias was created
+alias codex-gateway
+# Should show: alias codex-gateway='codex -c model_provider="litellm-gateway" -c model="gpt-4o"'
 ```
+
+**What is `codex-gateway`?**
+
+The installer automatically creates a shell alias that configures Codex CLI to use your LiteLLM gateway:
+
+```bash
+alias codex-gateway='codex -c model_provider="litellm-gateway" -c model="gpt-4o"'
+```
+
+This alias:
+- Sets the provider to `litellm-gateway` (instead of default OpenAI)
+- Sets the model to `gpt-4o` (which gateway maps to Bedrock model)
+- Reads your API key from `~/.codex/config.toml` (configured by install.sh)
+
+**Without the alias, you would need to type:**
+```bash
+codex -c 'model_provider="litellm-gateway"' -c 'model="gpt-4o"' exec "your prompt"
+```
+
+The alias is a shortcut so you can just type `codex-gateway` instead.
 
 ---
 
@@ -172,7 +196,7 @@ After installation, verify both access methods work:
 ### Test 1: Codex CLI
 
 ```bash
-# Test with the codex-gateway alias
+# Test with the codex-gateway alias (created by install.sh)
 codex-gateway exec "What is 2+2? Answer in one word."
 
 # Expected output:
