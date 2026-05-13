@@ -133,9 +133,9 @@ def validate_jwt_token(token: str) -> Dict:
                 }
             )
         else:
-            # No JWKS URL configured - decode without verification (testing only!)
-            logger.warning("JWKS_URL not configured - decoding JWT without verification!")
-            payload = jwt.decode(token, options={"verify_signature": False})
+            # No JWKS URL configured - REJECT request
+            logger.error("JWKS_URL not configured - cannot verify JWT tokens!")
+            raise ValueError("JWT validation requires JWKS_URL environment variable")
 
         # Extract user information
         user_info = {

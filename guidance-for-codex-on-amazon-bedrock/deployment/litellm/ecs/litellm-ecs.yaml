@@ -196,8 +196,8 @@ Resources:
         Fn::Sub: "${NetworkingStackName}-VpcId"
       SecurityGroupIngress:
         - IpProtocol: tcp
-          FromPort: 4000
-          ToPort: 4000
+          FromPort: !If [UseJwtMiddleware, 8080, 4000]
+          ToPort: !If [UseJwtMiddleware, 8080, 4000]
           SourceSecurityGroupId: !Ref ALBSecurityGroup
 
   DBSecurityGroup:
@@ -382,8 +382,8 @@ Resources:
             - !Ref TaskSecurityGroup
           AssignPublicIp: ENABLED
       LoadBalancers:
-        - ContainerName: litellm
-          ContainerPort: 4000
+        - ContainerName: !If [UseJwtMiddleware, jwt-middleware, litellm]
+          ContainerPort: !If [UseJwtMiddleware, 8080, 4000]
           TargetGroupArn: !Ref ALBTargetGroup
       DeploymentConfiguration:
         MinimumHealthyPercent: 100
