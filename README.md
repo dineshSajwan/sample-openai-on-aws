@@ -14,16 +14,28 @@ This guidance provides three production-ready deployment patterns for running Op
 
 ### What This Guidance Provides
 
+**Core Features (All Patterns):**
 - Corporate SSO integration (Okta, Azure AD, Auth0, AWS IAM Identity Center)
-- No API keys or static credentials to manage
 - Per-user CloudTrail audit trails for compliance
-- Hard quota enforcement with request blocking (Pattern 2/3)
-- Per-user and per-team budget limits with rate limiting
-- Real-time CloudWatch dashboards (token usage, latency, errors)
-- Long-term data lake for historical analysis (Pattern 3)
-- Productivity analytics and ROI reporting (Pattern 3)
-- One-command authentication (`aws sso login` or API key)
+- One-command authentication (`aws sso login` for Pattern 1, API key for Pattern 2/3)
 - Cross-platform support (Windows, macOS, Linux)
+- Guided deployment wizard (`cxwb`) with CloudFormation templates
+
+**Pattern 1 (Native AWS Access):**
+- No API keys or static credentials to manage (uses AWS SSO)
+- Soft monitoring via CloudWatch (alerts, not blocking)
+
+**Pattern 2 (Governed Gateway):**
+- Hard quota enforcement with request blocking
+- Per-user and per-team budget limits with rate limiting (via LiteLLM)
+- Real-time CloudWatch dashboards (token usage, latency, errors)
+- Self-service OIDC authentication via custom JWT middleware
+
+**Pattern 3 (Full Observability):**
+- Everything in Pattern 2, plus:
+- Long-term data lake for historical analysis (Kinesis → S3 → Athena)
+- SQL-based analytics with Glue Data Catalog
+- Foundation for productivity metrics and ROI reporting (integration guides provided)
 
 ### Choose Your Pattern
 
@@ -48,9 +60,9 @@ Need hard quota enforcement? (Block requests when limits hit)
 
 | Pattern | Setup Time | Best For |
 | ------- | ---------- | -------- |
-| **[Pattern 1: Native AWS Access](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN1.md)** | 5-60 min | Teams with IdC, soft monitoring OK |
-| **[Pattern 2: Governed Gateway](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN2.md)** | 15 min | Hard budgets, rate limiting |
-| **[Pattern 3: Full Observability](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN3.md)** | +30 min | ROI reporting, analytics |
+| **[Pattern 1: Native AWS Access](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN_IDC.md)** | 5-60 min | Teams with IdC, soft monitoring OK |
+| **[Pattern 2: Governed Gateway](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN_GATEWAY.md)** | 15 min | Hard budgets, rate limiting |
+| **[Pattern 3: Full Observability](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN_HYBRID.md)** | +30 min | ROI reporting, analytics |
 
 ### Quick Start
 
@@ -70,9 +82,9 @@ uv run cxwb distribute --bucket my-bucket  # Generate developer bundle
 
 **After running `cxwb init`, follow the guide for your chosen pattern:**
 
-- **Pattern 1 chosen?** → [Native AWS Access Quickstart](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN1.md)
-- **Pattern 2 chosen?** → [Governed Gateway Quickstart](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN2.md)
-- **Pattern 3 chosen?** → [Full Observability Quickstart](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN3.md)
+- **Pattern 1 chosen?** → [Native AWS Access Quickstart](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN_IDC.md)
+- **Pattern 2 chosen?** → [Governed Gateway Quickstart](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN_GATEWAY.md)
+- **Pattern 3 chosen?** → [Full Observability Quickstart](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN_HYBRID.md)
 
 ### Documentation
 
