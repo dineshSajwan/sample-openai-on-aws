@@ -31,10 +31,10 @@ Corporate IdP (Okta/Azure) → SAML → IAM Identity Center → AWS credentials 
 ### IdP-Specific Guides
 
 Choose your identity provider:
-- **Okta** → [Setup Guide](docs/providers/okta-setup.md)
-- **Microsoft Entra ID (Azure AD)** → [Setup Guide](docs/providers/microsoft-entra-id-setup.md)
-- **Auth0** → [Setup Guide](docs/providers/auth0-setup.md)
-- **Google Workspace** → [Setup Guide](docs/providers/google-workspace-setup.md)
+- **Okta** → [docs/providers/okta-setup.md](docs/providers/okta-setup.md) *(coming soon)*
+- **Microsoft Entra ID (Azure AD)** → [docs/providers/microsoft-entra-id-setup.md](docs/providers/microsoft-entra-id-setup.md) *(coming soon)*
+- **Auth0** → [docs/providers/auth0-setup.md](docs/providers/auth0-setup.md) *(coming soon)*
+- **Google Workspace** → [docs/providers/google-workspace-setup.md](docs/providers/google-workspace-setup.md) *(coming soon)*
 
 ---
 
@@ -140,9 +140,9 @@ AWS_REGION=us-east-1
 **Option A: External IdP (Okta, Azure AD, Auth0)**
 
 Follow your IdP-specific guide:
-- **Okta:** [docs/providers/okta-setup.md](docs/providers/okta-setup.md)
-- **Azure AD:** [docs/providers/microsoft-entra-id-setup.md](docs/providers/microsoft-entra-id-setup.md)
-- **Auth0:** [docs/providers/auth0-setup.md](docs/providers/auth0-setup.md)
+- **Okta:** [docs/providers/okta-setup.md](docs/providers/okta-setup.md) *(coming soon)*
+- **Azure AD:** [docs/providers/microsoft-entra-id-setup.md](docs/providers/microsoft-entra-id-setup.md) *(coming soon)*
+- **Auth0:** [docs/providers/auth0-setup.md](docs/providers/auth0-setup.md) *(coming soon)*
 
 **Option B: Identity Center Directory (Built-in)**
 
@@ -258,7 +258,7 @@ aws s3 presign s3://my-bucket/codex-sso-config.zip --expires-in 604800
 
 **Option 3: Self-service landing page**
 
-See [docs/distribution/landing-page.md](docs/distribution/landing-page.md)
+See [docs/distribution/landing-page.md](docs/distribution/landing-page.md) *(coming soon)*
 
 ---
 
@@ -517,7 +517,7 @@ aws cloudformation delete-stack \
 ## Next Steps
 
 - **Add monitoring:** [Optional: Add Monitoring](#optional-add-monitoring-otel)
-- **Migrate to Pattern 2:** [Migration guide](docs/migrate-patterns.md)
+- **Migrate to Pattern 2:** [docs/migrate-patterns.md](docs/migrate-patterns.md) *(coming soon)*
 - **Scale to more users:** Distribute bundle via self-service landing page
 - **Monitor costs:** Set up CloudWatch alarms on Bedrock spend
 

@@ -294,7 +294,7 @@ Full region × model matrix: **[docs/reference-regions.md](docs/reference-region
 ### Architecture & Deployment
 - **[docs/01-decide.md](docs/01-decide.md)** — Detailed pattern comparison
 - **[docs/deploy-identity-center.md](docs/deploy-identity-center.md)** — Pattern 1 technical guide
-- **[QUICKSTART_PATTERN_GATEWAY.md](QUICKSTART_PATTERN_GATEWAY.md)** — Pattern 2 technical guide (use quickstart instead)
+- **[QUICKSTART_PATTERN_GATEWAY.md](QUICKSTART_PATTERN_GATEWAY.md)** — Pattern 2 technical guide
 
 ### Operations
 - **[docs/operate-monitoring.md](docs/operate-monitoring.md)** — Monitoring and cost attribution

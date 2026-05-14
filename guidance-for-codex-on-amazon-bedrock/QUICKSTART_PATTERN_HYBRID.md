@@ -1,5 +1,7 @@
 # Quick Start: Pattern 3 — Full Observability
 
+> **Note:** The analytics pipeline infrastructure (Kinesis, Glue, Athena, productivity platform integrations, QuickSight/Grafana dashboards) described in this guide is **coming soon**. The CloudFormation templates, Lambda functions, and integration configs referenced below are not yet included in this repository. The SQL queries and architecture documentation are provided as a preview of what will ship. Pattern 2 is fully functional today.
+
 Add comprehensive analytics and productivity metrics on top of Pattern 2 in 30 minutes.
 
 **Use this pattern if:**
@@ -96,25 +98,14 @@ aws cloudwatch get-metric-statistics \
 
 ### Step 2: Deploy Analytics Pipeline
 
-**Option A: Using `cxwb` wizard**
+**Option A: Using `cxwb` wizard** *(coming soon)*
 
 ```bash
-cd source/
-
-# Check existing profile
-uv run cxwb status --profile codex-gateway
-
-# Add analytics to existing deployment
-uv run cxwb analytics deploy --profile codex-gateway
-
-# This deploys:
-# 1. codex-analytics-pipeline (Kinesis + S3 + Glue + Lambda)
-# 2. codex-analytics-dashboard (CloudWatch dashboard with Athena widgets)
-
-# Wait 5-7 minutes
+# The 'cxwb analytics' sub-command is not yet available.
+# Use Option B (manual CloudFormation) until it ships.
 ```
 
-**Option B: Manual CloudFormation deployment**
+**Option B: Manual CloudFormation deployment** *(CloudFormation templates coming soon)*
 
 ```bash
 cd deployment/infrastructure/
@@ -125,6 +116,7 @@ BUCKET_NAME=codex-analytics-$(aws sts get-caller-identity --query Account --outp
 aws s3 mb s3://$BUCKET_NAME --region us-west-2
 
 # 2. Deploy analytics pipeline stack
+# NOTE: analytics-pipeline.yaml is coming soon
 aws cloudformation deploy \
   --stack-name codex-analytics-pipeline \
   --template-file analytics-pipeline.yaml \
@@ -214,9 +206,12 @@ aws glue get-tables \
 
 ### Step 5: Deploy Athena Queries and Views
 
+*(CloudFormation templates coming soon)*
+
 ```bash
 cd deployment/infrastructure/
 
+# NOTE: logs-insights-queries.yaml is coming soon
 # 1. Deploy Athena saved queries
 aws cloudformation deploy \
   --stack-name codex-athena-queries \
@@ -359,9 +354,10 @@ aws athena get-query-results \
 - SPACE framework metrics (developer satisfaction, performance, activity, collaboration, efficiency)
 - AI coding impact tracking (Codex usage → velocity correlation)
 
-**Integration Steps:**
+**Integration Steps:** *(coming soon — CloudFormation template not yet included)*
 
 ```bash
+# NOTE: jellyfish-integration.yaml is coming soon
 # 1. Create Jellyfish data export IAM role
 cd deployment/infrastructure/
 
@@ -388,7 +384,7 @@ JELLYFISH_ROLE=$(aws cloudformation describe-stacks \
 # Data format: Parquet
 ```
 
-**Jellyfish Setup:** [docs/integrate-jellyfish.md](docs/integrate-jellyfish.md)
+**Jellyfish Setup:** [docs/integrate-jellyfish.md](docs/integrate-jellyfish.md) *(coming soon)*
 
 ---
 
@@ -424,7 +420,7 @@ aws logs put-subscription-filter \
   --region us-west-2
 ```
 
-**LinearB Setup:** [docs/integrate-linearb.md](docs/integrate-linearb.md)
+**LinearB Setup:** [docs/integrate-linearb.md](docs/integrate-linearb.md) *(coming soon)*
 
 ---
 
@@ -459,7 +455,7 @@ aws events put-rule \
 # Schedule: Daily
 ```
 
-**Waydev Setup:** [docs/integrate-waydev.md](docs/integrate-waydev.md)
+**Waydev Setup:** [docs/integrate-waydev.md](docs/integrate-waydev.md) *(coming soon)*
 
 ---
 
@@ -508,7 +504,7 @@ aws events put-targets \
   --region us-west-2
 ```
 
-**Allstacks Setup:** [docs/integrate-allstacks.md](docs/integrate-allstacks.md)
+**Allstacks Setup:** [docs/integrate-allstacks.md](docs/integrate-allstacks.md) *(coming soon)*
 
 ---
 
