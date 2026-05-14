@@ -128,6 +128,9 @@ elif [[ "$SHELL" == *"bash"* ]]; then
   SHELL_RC="$HOME/.bashrc"
 fi
 
+MODEL="$(grep '^model ' "$fragment" | head -1 | sed 's/^model = "\(.*\)"/\1/')"
+MODEL="${MODEL:-openai.gpt-5.4}"
+
 if [[ -n "$SHELL_RC" ]]; then
   if ! grep -q "alias codex-gateway=" "$SHELL_RC" 2>/dev/null; then
     echo "" >> "$SHELL_RC"
