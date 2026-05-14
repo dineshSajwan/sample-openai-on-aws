@@ -15,6 +15,9 @@ Optional:
   --key-mint-url URL      Self-service key endpoint (e.g. https://gw/sso/key/generate)
   --model ID              Default model alias (default: openai.gpt-5.4)
   --profile-name NAME     Codex profile name (default: codex-gateway)
+  --enable-local-otel     Enable local OTEL collector configuration
+  --aws-region REGION     AWS region for OTEL (required if --enable-local-otel)
+  --user-email EMAIL      User email for attribution (required if --enable-local-otel)
   --outdir DIR            Output directory (default: ./codex-gateway-config)
 USAGE
 }
@@ -24,6 +27,9 @@ KEY_MINT_URL=""
 MODEL="openai.gpt-5.4"
 PROFILE_NAME="codex-gateway"
 OUTDIR="./codex-gateway-config"
+ENABLE_LOCAL_OTEL="false"
+AWS_REGION=""
+USER_EMAIL=""
 
 while [[ $# -gt 0 ]]; do
   case "$1" in
@@ -31,6 +37,9 @@ while [[ $# -gt 0 ]]; do
     --key-mint-url) KEY_MINT_URL="$2"; shift 2 ;;
     --model) MODEL="$2"; shift 2 ;;
     --profile-name) PROFILE_NAME="$2"; shift 2 ;;
+    --enable-local-otel) ENABLE_LOCAL_OTEL="true"; shift ;;
+    --aws-region) AWS_REGION="$2"; shift 2 ;;
+    --user-email) USER_EMAIL="$2"; shift 2 ;;
     --outdir) OUTDIR="$2"; shift 2 ;;
     -h|--help) usage; exit 0 ;;
     *) echo "unknown flag: $1" >&2; usage; exit 2 ;;
@@ -41,6 +50,13 @@ if [[ -z "$GATEWAY_URL" ]]; then
   echo "missing required flag: --gateway-url" >&2
   usage
   exit 2
+fi
+
+if [[ "$ENABLE_LOCAL_OTEL" == "true" ]]; then
+  if [[ -z "$AWS_REGION" ]] || [[ -z "$USER_EMAIL" ]]; then
+    echo "error: --enable-local-otel requires --aws-region and --user-email" >&2
+    exit 2
+  fi
 fi
 
 mkdir -p "$OUTDIR"
@@ -67,6 +83,22 @@ api_key = "env:OPENAI_API_KEY"
 http_headers = { Authorization = "Bearer YOUR_API_KEY_HERE" }
 # >>> end codex-gateway managed <<<
 TOML
+
+# Add OTEL configuration if enabled
+if [[ "$ENABLE_LOCAL_OTEL" == "true" ]]; then
+  cat >>"$OUTDIR/config.toml.fragment" <<TOML
+
+# >>> codex-otel managed: do not edit inside fences <<<
+# OpenTelemetry configuration for local metrics collection
+[otel]
+environment = "prod"
+exporter = { otlp-http = {
+  endpoint = "http://localhost:4318/v1/metrics",
+  protocol = "binary"
+}}
+# >>> end codex-otel managed <<<
+TOML
+fi
 
 cat >"$OUTDIR/install.sh" <<'INSTALL'
 #!/usr/bin/env bash

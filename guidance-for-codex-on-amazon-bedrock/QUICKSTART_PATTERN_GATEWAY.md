@@ -23,6 +23,49 @@ Corporate IdP (Okta/Azure) → OIDC → LiteLLM Gateway → Bedrock
 
 ---
 
+## Monitoring Options
+
+This guidance supports **OpenTelemetry monitoring** with CloudWatch native OTLP ingestion for usage tracking and cost attribution.
+
+### Local Collectors Only (Default)
+- **What:** Each developer runs a lightweight collector binary (~15MB) on their machine
+- **Metrics:** Client-side operations, E2E latency, local tool usage
+- **Infrastructure:** No ECS deployment required
+- **Dashboard:** CloudWatch with PromQL queries
+- **Best for:** Quick setup, cost-sensitive teams, evaluation
+
+**Developer experience:**
+```bash
+# Installed automatically via install.sh
+~/.codex/otel/start-collector.sh  # Starts in background
+~/.codex/otel/stop-collector.sh   # Stops collector
+~/.codex/otel/collector-status.sh # Check status
+```
+
+### Central Collector Only
+- **What:** ECS Fargate collector receives metrics from LiteLLM gateway
+- **Metrics:** Server-side operations, API costs, quotas, rate limits
+- **Infrastructure:** Requires VPC, ALB, ECS (deployed via `cxwb deploy`)
+- **Best for:** Server-side visibility, cannot be disabled by users
+
+### Hybrid (Both)
+- **What:** Local collectors (client metrics) + Central collector (server metrics)
+- **Metrics:** Complete observability - client and server combined
+- **Best for:** Production deployments requiring full visibility
+
+### Configuration
+During `cxwb init`, you'll be prompted:
+```
+? Enable OpenTelemetry monitoring? Yes
+? Monitoring mode:
+  ❯ Local collectors only - Client-side metrics, no ECS infrastructure
+    Central collector only - Server-side metrics from gateway
+    Hybrid (local + central collectors) - Complete visibility
+    None - Disable monitoring
+```
+
+---
+
 ## Prerequisites
 
 ### Required

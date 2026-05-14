@@ -45,10 +45,18 @@ Parameters:
     Default: ''
     Description: OIDC client ID for ALB JWT audience (aud) claim validation
 
+  EnableAnalytics:
+    Type: String
+    Default: 'false'
+    AllowedValues: ['true', 'false']
+    Description: Enable dual-export (OTLP + EMF) for analytics pipeline. When false, only OTLP export is used.
+
 Conditions:
   HasCustomDomain: !Not [!Equals [!Ref CustomDomainName, '']]
   HasJwtAuth: !Not [!Equals [!Ref OidcIssuerUrl, '']]
   HasOidcClientId: !Not [!Equals [!Ref OidcClientId, '']]
+  AnalyticsEnabled: !Equals [!Ref EnableAnalytics, 'true']
+  AnalyticsDisabled: !Not [!Equals [!Ref EnableAnalytics, 'true']]
 
 # Rules section removed - validation handled by deployment script
 
@@ -77,6 +85,7 @@ Resources:
 
   MetricsLogGroup:
     Type: AWS::Logs::LogGroup
+    Condition: AnalyticsEnabled
     Properties:
       LogGroupName: !Sub "/aws/${AWS::StackName}/metrics"
       RetentionInDays: 30
@@ -320,15 +329,19 @@ Resources:
               - Effect: Allow
                 Action:
                   - cloudwatch:PutMetricData
+                  - monitoring:PutMetricData
                 Resource: '*'
-              - Effect: Allow
-                Action:
-                  - logs:CreateLogStream
-                  - logs:PutLogEvents
-                  - logs:CreateLogGroup
-                Resource:
-                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codex/metrics'
-                  - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codex/metrics:*'
+              - !If
+                - AnalyticsEnabled
+                - Effect: Allow
+                  Action:
+                    - logs:CreateLogStream
+                    - logs:PutLogEvents
+                    - logs:CreateLogGroup
+                  Resource:
+                    - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codex/metrics'
+                    - !Sub 'arn:${AWS::Partition}:logs:${AWS::Region}:${AWS::AccountId}:log-group:/aws/codex/metrics:*'
+                - !Ref 'AWS::NoValue'
         # We keep the CloudWatch permissions but remove the AssumeRole permission
         # that was related to the overly permissive trust policy
         - PolicyName: SSMParameterAccess
