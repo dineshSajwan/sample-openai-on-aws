@@ -146,7 +146,8 @@ codex-gateway-config/
 
 ```bash
 # 1. Extract bundle
-unzip codex-gateway-config.zip
+# The zip is created in the dist/ folder of the project directory
+unzip dist/codex-gateway-config.zip
 cd codex-gateway-config/
 
 # 2. Get API key from admin (see "Getting API Key - Two Options" section)
