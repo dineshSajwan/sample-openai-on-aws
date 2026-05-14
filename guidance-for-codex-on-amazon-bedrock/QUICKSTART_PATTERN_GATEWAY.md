@@ -116,9 +116,11 @@ uv run cxwb deploy --profile  <profile-name>
 # - If OIDC enabled: Self-service portal at http://<alb-url>/api/my-key
 
 # 6. Generate developer bundle
-uv run cxwb distribute --profile <profile-name> --bucket my-bucket
+# --bucket is optional; if omitted, bundle is saved locally only.
+# The bucket is created automatically if it doesn't exist.
+uv run cxwb distribute --profile <profile-name> --bucket <your-s3-bucket>
 
-# Output: S3 presigned URL
+# Output: S3 presigned URL (or local zip path if --bucket omitted)
 ```
 
 **Bundle contents:**
