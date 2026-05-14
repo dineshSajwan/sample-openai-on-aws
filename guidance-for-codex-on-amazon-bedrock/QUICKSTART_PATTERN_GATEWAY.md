@@ -125,7 +125,7 @@ uv run cxwb distribute --profile <profile-name> --bucket <your-s3-bucket>
 
 **Bundle contents:**
 ```
-codex-gateway-config/
+<profile-name>-config/
 ├── install.sh              # Developer runs this
 ├── uninstall.sh            # Cleanup script
 ├── refresh-key.sh          # Optional: refresh expired API key
@@ -147,8 +147,9 @@ codex-gateway-config/
 ```bash
 # 1. Extract bundle
 # The zip is created in the dist/ folder of the project directory
-unzip dist/codex-gateway-config.zip
-cd codex-gateway-config/
+# The zip name matches your profile: dist/<profile-name>-config.zip
+unzip dist/<profile-name>-config.zip
+cd <profile-name>-config/
 
 # 2. Get API key from admin (see "Getting API Key - Two Options" section)
 

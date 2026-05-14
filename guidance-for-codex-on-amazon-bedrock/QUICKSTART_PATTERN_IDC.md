@@ -104,7 +104,7 @@ uv run cxwb distribute --profile codex-bedrock --bucket my-distribution-bucket
 
 **Bundle contents:**
 ```
-codex-sso-config/
+<profile-name>-config/
 ├── install.sh              # Developer runs this
 ├── uninstall.sh            # Cleanup script
 ├── codex-sso-creds         # Credential helper (bash script)
@@ -268,8 +268,9 @@ See [docs/distribution/landing-page.md](docs/distribution/landing-page.md)
 
 ```bash
 # 1. Extract bundle
-unzip codex-sso-config.zip
-cd codex-sso-config/
+# The zip name matches the admin's profile: <profile-name>-config.zip
+unzip <profile-name>-config.zip
+cd <profile-name>-config/
 
 # 2. Run installer
 ./install.sh
