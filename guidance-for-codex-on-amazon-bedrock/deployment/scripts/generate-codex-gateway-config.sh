@@ -128,6 +128,9 @@ elif [[ "$SHELL" == *"bash"* ]]; then
   SHELL_RC="$HOME/.bashrc"
 fi
 
+MODEL="$(grep '^model ' "$fragment" | head -1 | sed 's/^model = "\(.*\)"/\1/')"
+MODEL="${MODEL:-openai.gpt-5.4}"
+
 if [[ -n "$SHELL_RC" ]]; then
   if ! grep -q "alias codex-gateway=" "$SHELL_RC" 2>/dev/null; then
     echo "" >> "$SHELL_RC"
@@ -349,7 +352,7 @@ codex exec "test"           # ✗ Wrong - connects to OpenAI
 
 ## Getting Help
 
-- See QUICKSTART_PATTERN_GATEWAY.md in the main repository for detailed documentation
+- See docs/QUICKSTART_LLM_GATEWAY.md in the main repository for detailed documentation
 - Contact your platform team for API key issues
 - For gateway access issues, verify your IP is in the allowed CIDR range
 

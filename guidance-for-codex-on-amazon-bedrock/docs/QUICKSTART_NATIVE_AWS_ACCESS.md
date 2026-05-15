@@ -1,4 +1,4 @@
-# Quick Start: Pattern 1 — Native AWS Access
+# Quick Start: Native AWS Access
 
 Deploy Codex on Bedrock with IAM Identity Center authentication in 5-60 minutes.
 
@@ -31,10 +31,10 @@ Corporate IdP (Okta/Azure) → SAML → IAM Identity Center → AWS credentials 
 ### IdP-Specific Guides
 
 Choose your identity provider:
-- **Okta** → [Setup Guide](docs/providers/okta-setup.md)
-- **Microsoft Entra ID (Azure AD)** → [Setup Guide](docs/providers/microsoft-entra-id-setup.md)
-- **Auth0** → [Setup Guide](docs/providers/auth0-setup.md)
-- **Google Workspace** → [Setup Guide](docs/providers/google-workspace-setup.md)
+- **Okta** → [providers/okta-setup.md](providers/okta-setup.md) *(coming soon)*
+- **Microsoft Entra ID (Azure AD)** → [providers/microsoft-entra-id-setup.md](providers/microsoft-entra-id-setup.md) *(coming soon)*
+- **Auth0** → [providers/auth0-setup.md](providers/auth0-setup.md) *(coming soon)*
+- **Google Workspace** → [providers/google-workspace-setup.md](providers/google-workspace-setup.md) *(coming soon)*
 
 ---
 
@@ -104,7 +104,7 @@ uv run cxwb distribute --profile codex-bedrock --bucket my-distribution-bucket
 
 **Bundle contents:**
 ```
-codex-sso-config/
+<profile-name>-config/
 ├── install.sh              # Developer runs this
 ├── uninstall.sh            # Cleanup script
 ├── codex-sso-creds         # Credential helper (bash script)
@@ -140,9 +140,9 @@ AWS_REGION=us-east-1
 **Option A: External IdP (Okta, Azure AD, Auth0)**
 
 Follow your IdP-specific guide:
-- **Okta:** [docs/providers/okta-setup.md](docs/providers/okta-setup.md)
-- **Azure AD:** [docs/providers/microsoft-entra-id-setup.md](docs/providers/microsoft-entra-id-setup.md)
-- **Auth0:** [docs/providers/auth0-setup.md](docs/providers/auth0-setup.md)
+- **Okta:** [providers/okta-setup.md](providers/okta-setup.md) *(coming soon)*
+- **Azure AD:** [providers/microsoft-entra-id-setup.md](providers/microsoft-entra-id-setup.md) *(coming soon)*
+- **Auth0:** [providers/auth0-setup.md](providers/auth0-setup.md) *(coming soon)*
 
 **Option B: Identity Center Directory (Built-in)**
 
@@ -258,7 +258,7 @@ aws s3 presign s3://my-bucket/codex-sso-config.zip --expires-in 604800
 
 **Option 3: Self-service landing page**
 
-See [docs/distribution/landing-page.md](docs/distribution/landing-page.md)
+See [distribution/landing-page.md](distribution/landing-page.md) *(coming soon)*
 
 ---
 
@@ -268,8 +268,9 @@ See [docs/distribution/landing-page.md](docs/distribution/landing-page.md)
 
 ```bash
 # 1. Extract bundle
-unzip codex-sso-config.zip
-cd codex-sso-config/
+# The zip name matches the admin's profile: <profile-name>-config.zip
+unzip <profile-name>-config.zip
+cd <profile-name>-config/
 
 # 2. Run installer
 ./install.sh
@@ -481,13 +482,13 @@ which aws
 
 ### More troubleshooting
 
-See [docs/operate-troubleshooting.md](docs/operate-troubleshooting.md)
+See [operate-troubleshooting.md](operate-troubleshooting.md)
 
 ---
 
 ## Cleanup
 
-**To remove Pattern 1 deployment:**
+**To remove the Native AWS Access deployment:**
 
 ```bash
 # 1. Developers uninstall locally
@@ -516,7 +517,7 @@ aws cloudformation delete-stack \
 ## Next Steps
 
 - **Add monitoring:** [Optional: Add Monitoring](#optional-add-monitoring-otel)
-- **Migrate to Pattern 2:** [Migration guide](docs/migrate-patterns.md)
+- **Migrate to LLM Gateway:** [QUICKSTART_LLM_GATEWAY.md](QUICKSTART_LLM_GATEWAY.md)
 - **Scale to more users:** Distribute bundle via self-service landing page
 - **Monitor costs:** Set up CloudWatch alarms on Bedrock spend
 
@@ -524,6 +525,6 @@ aws cloudformation delete-stack \
 
 ## Support
 
-- **Documentation:** [README.md](README.md)
+- **Documentation:** [../QUICKSTART.md](../QUICKSTART.md)
 - **Issues:** [GitHub Issues](https://github.com/aws-samples/guidance-for-codex-on-aws/issues)
-- **Technical guide:** [docs/deploy-identity-center.md](docs/deploy-identity-center.md)
+- **Technical guide:** [deploy-identity-center.md](deploy-identity-center.md)

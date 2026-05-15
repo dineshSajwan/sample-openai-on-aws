@@ -34,7 +34,7 @@ def _confirm(prompt: str, default: bool = False) -> bool:
 
 
 def _idc_common() -> dict:
-    return {
+    data = {
         "start_url": _text(
             "IdC start URL (e.g. https://d-xxxxxxxxxx.awsapps.com/start):",
             validate=lambda v: v.startswith("https://") or "must start with https://",
@@ -53,10 +53,12 @@ def _idc_common() -> dict:
             "Codex profile name (written into ~/.codex/config.toml):",
             default="codex",
         ),
-        "otel_endpoint": _text(
-            "OTel endpoint (optional, leave blank to skip):", default=""
-        ),
     }
+    if _confirm("Send Codex telemetry to an OTel endpoint?", default=False):
+        data["otel_endpoint"] = _text("OTel endpoint URL:", default="")
+    else:
+        data["otel_endpoint"] = ""
+    return data
 
 
 def _idc_flow() -> dict:
@@ -122,9 +124,8 @@ def _gateway_flow() -> dict:
         "manages_infra": True,
         "region": region,
         "networking_stack": _text(
-            "Networking stack name:", default="codex-otel-networking"
+            "Networking stack name:", default="codex-networking"
         ),
-        "otel_stack": _text("OTel stack name:", default="codex-otel-collector"),
         "gateway_stack": _text("Gateway stack name:", default="codex-litellm-gateway"),
         "allowed_cidr": _text(
             "CIDR allowed to reach the ALB (corporate network CIDR or VPN range, e.g. 10.0.0.0/8):",

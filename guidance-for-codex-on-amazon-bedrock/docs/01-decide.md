@@ -1,36 +1,32 @@
 # Decide
 
-Three deployment patterns, in recommended order. Choose the first one your organization can run.
+Two deployment patterns, in recommended order. Choose the first one your organization can run.
 
-> **Decision rule:** If you can run IAM Identity Center, use IAM Identity Center (Pattern 1).
-> If you need hard per-user budgets or rate limiting, use Gateway (Pattern 2).
-> If you need historical analytics and ROI reporting, add Pattern 3 on top of Pattern 2.
+> **Decision rule:** If you can run IAM Identity Center, use Native AWS Access.
+> If you need hard per-user budgets or rate limiting, use LLM Gateway.
 
 ## Pattern Comparison
 
-| Capability | Pattern 1 | Pattern 2 | Pattern 3 |
-|------------|-----------|-----------|-----------|
-| **Authentication** | SAML → IdC | OIDC → Gateway | OIDC → Gateway |
-| **IAM Identity Center Required?** | ✅ Yes | ❌ No | ❌ No |
-| **Path to Bedrock** | Codex → Bedrock (native AWS SDK) | Codex → Gateway → Bedrock | Codex → Gateway → Bedrock |
-| **Developer Command** | `aws sso login` | `export OPENAI_API_KEY=...` | Same as Pattern 2 |
-| **Per-user CloudTrail Audit** | ✅ Native | ✅ Gateway logs | ✅ Gateway logs |
-| **Soft Alerts (CloudWatch)** | ✅ Yes | ✅ Yes | ✅ Yes |
-| **Hard Budget Limits** | ❌ No | ✅ Yes | ✅ Yes |
-| **Per-team Quotas** | ❌ No | ✅ Yes | ✅ Yes |
-| **Rate Limiting (RPM/TPM)** | ❌ No | ✅ Yes | ✅ Yes |
-| **Model Routing/Fallback** | ❌ No | ✅ Yes | ✅ Yes |
-| **Historical Analytics (Athena)** | ❌ No | ❌ No | ✅ Yes |
-| **Productivity Platform Integration** | ❌ No | ❌ No | ✅ Yes |
-| **ROI Reporting** | ❌ No | ❌ No | ✅ Yes |
-| **Setup Time** | 5-60 min | 15 min | Pattern 2 + 30 min |
-| **Infra Cost** | Free (AWS control plane) | ~$100-150/mo | Pattern 2 + ~$50-100/mo |
+| Capability | Native AWS Access | LLM Gateway |
+|------------|-------------------|------------------|
+| **Authentication** | SAML → IdC | OIDC → Gateway |
+| **IAM Identity Center Required?** | ✅ Yes | ❌ No |
+| **Path to Bedrock** | Codex → Bedrock (native AWS SDK) | Codex → Gateway → Bedrock |
+| **Developer Command** | `aws sso login` | `export OPENAI_API_KEY=...` |
+| **Per-user CloudTrail Audit** | ✅ Native | ✅ Gateway logs |
+| **Soft Alerts (CloudWatch)** | Optional | Optional |
+| **Hard Budget Limits** | ❌ No | Optional |
+| **Per-team Quotas** | ❌ No | Optional |
+| **Rate Limiting (RPM/TPM)** | ❌ No | Optional |
+| **Model Routing/Fallback** | ❌ No | ✅ Yes |
+| **Setup Time** | 5-60 min | 15 min |
+| **Infra Cost** | Free (AWS control plane) | ~$100-150/mo |
 
 ---
 
 ---
 
-## Prerequisite checklist — Pattern 1 (IAM Identity Center)
+## Prerequisite checklist — Native AWS Access (IAM Identity Center)
 
 Run this path if **all** of the following are true:
 
@@ -44,9 +40,9 @@ Run this path if **all** of the following are true:
 - [ ] Per-user *attribution* in CloudTrail/CUR is sufficient — you do **not**
       require hard per-user token or cost cutoffs.
 
-If all five apply, proceed to [Deploy — IAM Identity Center](deploy-identity-center.md) or [QUICKSTART_PATTERN_IDC.md](../QUICKSTART_PATTERN_IDC.md).
+If all five apply, proceed to [Deploy — IAM Identity Center](deploy-identity-center.md) or [QUICKSTART_NATIVE_AWS_ACCESS.md](QUICKSTART_NATIVE_AWS_ACCESS.md).
 
-## Prerequisite checklist — Pattern 2/3 (Gateway)
+## Prerequisite checklist — LLM Gateway
 
 Run this path if IdC is not available **or** you need centralized
 enforcement. All of the following must apply:
@@ -71,13 +67,13 @@ other OpenAI-compatible gateways — **Portkey**, **Bifrost**, **Kong AI Gateway
 **Helicone**, the **AWS Bedrock Gateway** sample, or a custom FastAPI shim.
 Choose whichever matches your organization's operational posture.
 
-*(Canonical deploy doc: [QUICKSTART_PATTERN_GATEWAY.md](../QUICKSTART_PATTERN_GATEWAY.md).)*
+*(Canonical deploy doc: [QUICKSTART_LLM_GATEWAY.md](QUICKSTART_LLM_GATEWAY.md).)*
 
 ---
 
 ## Why this order
 
-**Pattern 1 (IdC) is recommended first because:**
+**Native AWS Access (IdC) is recommended first because:**
 
 1. **Enterprise audiences need centralized cost and usage attribution with
    scalable distribution.** That eliminates the static Bedrock API key as a
@@ -89,11 +85,10 @@ Choose whichever matches your organization's operational posture.
    no SmartScreen or Gatekeeper friction.
 3. **Native Codex integration.** Codex natively speaks SigV4 to Bedrock via the AWS SDK credential chain.
 
-**Pattern 2/3 (Gateway) provides additional value for:**
+**LLM Gateway provides additional value for:**
 
 1. **Hard enforcement.** The gateway retains real value for *enforcement* (hard per-user budgets, rate limiting, central policy).
 2. **Organizations without IdC.** Gateway with OIDC is faster to set up than IdC + SAML federation.
-3. **Historical analytics (Pattern 3).** Long-term data lake for trend analysis and ROI reporting.
 
 **Trade-offs:**
 
