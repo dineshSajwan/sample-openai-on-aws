@@ -190,9 +190,8 @@ def _gateway_flow() -> dict:
         "manages_infra": True,
         "region": region,
         "networking_stack": _text(
-            "Networking stack name:", default="codex-otel-networking"
+            "Networking stack name:", default="codex-networking"
         ),
-        "otel_stack": _text("OTel stack name:", default="codex-otel-collector"),
         "gateway_stack": _text("Gateway stack name:", default="codex-litellm-gateway"),
         "allowed_cidr": _text(
             "CIDR allowed to reach the ALB (corporate network CIDR or VPN range, e.g. 10.0.0.0/8):",

@@ -370,6 +370,7 @@ def run(
         click.echo("📊 ADMIN ACCESS TO LITELLM DASHBOARD")
         click.echo("="*70)
         click.echo(f"\nDashboard URL: {base_url}/ui")
+        secret_id = f"{p['gateway_stack']}/litellm-master-key"
         click.echo("\nTo retrieve the master key:")
         click.echo(f"  aws secretsmanager get-secret-value \\")
         click.echo(f"    --region {region} \\")

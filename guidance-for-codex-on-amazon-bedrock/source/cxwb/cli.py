@@ -69,15 +69,17 @@ def destroy(profile_name: str, yes: bool) -> None:
 @click.option(
     "--outdir",
     type=click.Path(path_type=Path),
-    default=Path("./dist/codex-bundle"),
-    show_default=True,
+    default=None,
+    help="Output directory for the bundle (default: ./dist/<profile-name>-config).",
 )
 @click.option("--bucket", default=None, help="S3 bucket for upload (optional).")
 @click.option("--expires", default=604800, show_default=True, help="Presign TTL, seconds.")
 @click.option("--force", is_flag=True, help="Overwrite --outdir even if it was not created by cxwb.")
 def distribute(
-    profile_name: str, outdir: Path, bucket: str | None, expires: int, force: bool
+    profile_name: str, outdir: Path | None, bucket: str | None, expires: int, force: bool
 ) -> None:
+    if outdir is None:
+        outdir = Path(f"./dist/{profile_name}-config")
     distribute_cmd.run(profile_name, outdir, bucket, expires, force)
 
 
