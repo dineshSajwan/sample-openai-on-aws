@@ -48,4 +48,4 @@ general_settings:
 litellm_settings:
   set_verbose: false
   drop_params: true               # silently drop unsupported OpenAI params
-  callbacks: ["otel"]             # forwards success + failure events to OTel collector
+  # callbacks: ["otel"]           # uncomment + set OTEL_ENDPOINT env var if you wire up an OTel collector

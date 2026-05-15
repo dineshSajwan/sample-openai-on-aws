@@ -1,4 +1,4 @@
-# Quick Start: Pattern 2 — Governed Gateway
+# Quick Start: LLM Gateway
 
 Deploy Codex on Bedrock with LiteLLM gateway for hard quota enforcement and centralized policy control.
 
@@ -41,7 +41,7 @@ Corporate IdP (Okta/Azure) → OIDC → LiteLLM Gateway → Bedrock
 - [ ] Identity provider with OIDC support (Okta, Azure AD, Auth0, Cognito)
 - [ ] JWKS URL from your IdP (e.g., `https://tenant.okta.com/.well-known/jwks.json`)
 
-**Note:** OIDC self-service is now available via **custom JWT middleware** - no Enterprise license required! See [Option B: Self-Service OIDC](#option-b-self-service-oidc-portal-custom-jwt-middleware) for setup.
+**Note:** OIDC self-service is available via the **custom JWT middleware** shipped in this guidance. See [Option B: Self-Service OIDC](#option-b-self-service-oidc-portal-custom-jwt-middleware) for setup.
 
 ---
 
@@ -105,10 +105,9 @@ uv run cxwb build --profile <profile-name>
 uv run cxwb deploy --profile  <profile-name>
 
 # This deploys stacks in order:
-# 1. codex-otel-networking (VPC, subnets, NAT gateway)
-# 2. codex-otel-collector (OpenTelemetry collector for metrics)
-# 3. codex-user-key-mapping (DynamoDB table - if OIDC enabled)
-# 4. codex-litellm-gateway (ECS Fargate + ALB + LiteLLM + JWT middleware)
+# 1. codex-networking (VPC, subnets, NAT gateway)
+# 2. codex-user-key-mapping (DynamoDB table - if OIDC enabled)
+# 3. codex-litellm-gateway (ECS Fargate + ALB + LiteLLM + JWT middleware)
 
 # Wait 10-15 minutes for deployment
 # Outputs:
@@ -520,40 +519,11 @@ curl -X POST "$GATEWAY_URL/model/new" \
 
 ---
 
-## Optional: Add Monitoring (OTel)
+## Telemetry
 
-**Deploy CloudWatch observability for usage tracking:**
+LiteLLM has built-in support for spend tracking, request logging, and OTel/Prometheus callbacks. Configure them in `litellm_config.yaml` — see the [LiteLLM observability docs](https://docs.litellm.ai/docs/observability) for the supported sinks (CloudWatch, Prometheus, Langfuse, Datadog, custom OTel collectors).
 
-```bash
-cd deployment/scripts/
-
-./deploy-otel-stack.sh \
-  --region us-west-2 \
-  --profile codex-gateway
-
-# This deploys:
-# - codex-otel-collector (ECS Fargate + ALB)
-# - codex-otel-dashboard (CloudWatch dashboard)
-
-# Get OTel collector URL
-OTEL_ENDPOINT=$(aws cloudformation describe-stacks \
-  --stack-name codex-otel-collector \
-  --region us-west-2 \
-  --query 'Stacks[0].Outputs[?OutputKey==`CollectorURL`].OutputValue' \
-  --output text)
-
-# Configure LiteLLM to export metrics
-curl -X POST "$GATEWAY_URL/config/update" \
-  -H "Authorization: Bearer $LITELLM_MASTER_KEY" \
-  -H "Content-Type: application/json" \
-  -d "{
-    \"success_callback\": [\"otel\"],
-    \"otel_endpoint\": \"$OTEL_ENDPOINT\"
-  }"
-
-# View dashboard
-open "https://console.aws.amazon.com/cloudwatch/home?region=us-west-2#dashboards:name=CodexOnBedrock"
-```
+If you bring your own gateway (Portkey, Kong AI Gateway, Helicone, etc.), use that gateway's native telemetry instead.
 
 ---
 
@@ -757,12 +727,13 @@ aws cloudformation describe-stack-events --stack-name codex-litellm-gateway \
 
 ```bash
 # 1. Delete CloudFormation stacks (in reverse order)
-aws cloudformation delete-stack --stack-name codex-gateway --region us-west-2
-aws cloudformation delete-stack --stack-name codex-gateway-db --region us-west-2
+# Names match the wizard defaults; adjust if you used custom names in `cxwb init`.
+aws cloudformation delete-stack --stack-name codex-litellm-gateway --region us-west-2
+aws cloudformation delete-stack --stack-name codex-user-key-mapping --region us-west-2  # only if OIDC was enabled
 aws cloudformation delete-stack --stack-name codex-networking --region us-west-2
 
 # 2. Delete ECR repository
-aws ecr delete-repository --repository-name codex-litellm --force --region us-west-2
+aws ecr delete-repository --repository-name codex-litellm-gateway --force --region us-west-2
 
 # 3. Developers uninstall
 ./uninstall.sh
@@ -775,15 +746,13 @@ aws ecr delete-repository --repository-name codex-litellm --force --region us-we
 ## Next Steps
 
 - **Configure quota policies:** [Configure Quota Policies](#configure-quota-policies)
-- **Add monitoring:** [Optional: Add Monitoring](#optional-add-monitoring-otel)
-- **Upgrade to Pattern 3:** [QUICKSTART_PATTERN_HYBRID.md](QUICKSTART_PATTERN_HYBRID.md)
+- **Configure telemetry:** [Telemetry](#telemetry)
 - **Scale horizontally:** Add ECS task auto-scaling based on ALB metrics
 
 ---
 
 ## Support
 
-- **Documentation:** [README.md](README.md)
+- **Documentation:** [../QUICKSTART.md](../QUICKSTART.md)
 - **Issues:** [GitHub Issues](https://github.com/aws-samples/guidance-for-codex-on-aws/issues)
-- **Technical guide:** [docs/deploy-gateway.md](docs/deploy-gateway.md)
 - **LiteLLM docs:** [docs.litellm.ai](https://docs.litellm.ai)

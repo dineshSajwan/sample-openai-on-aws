@@ -10,59 +10,47 @@ Welcome to the Sample OpenAI-on-AWS repository! This repository provides product
 
 **Enterprise-ready deployment patterns for OpenAI Codex with Amazon Bedrock**
 
-This guidance provides three production-ready deployment patterns for running OpenAI Codex at enterprise scale with corporate SSO, quota enforcement, and comprehensive observability.
+This guidance provides two production-ready deployment patterns for running OpenAI Codex at enterprise scale with corporate SSO, optional quota enforcement, and optional observability.
 
 ### What This Guidance Provides
 
-**Core Features (All Patterns):**
+**Core Features (Both Patterns):**
 - Corporate SSO integration (Okta, Azure AD, Auth0, AWS IAM Identity Center)
 - Per-user CloudTrail audit trails for compliance
-- One-command authentication (`aws sso login` for Pattern 1, API key for Pattern 2/3)
+- One-command authentication (`aws sso login` for Native AWS Access, API key for LLM Gateway)
 - Cross-platform support (Windows, macOS, Linux)
 - Guided deployment wizard (`cxwb`) with CloudFormation templates
 
-**Pattern 1 (Native AWS Access):**
+**Native AWS Access:**
 - No API keys or static credentials to manage (uses AWS SSO)
-- Soft monitoring via CloudWatch (alerts, not blocking)
+- Optional telemetry via OTel endpoint
 
-**Pattern 2 (Governed Gateway):**
-- Hard quota enforcement with request blocking
-- Per-user and per-team budget limits with rate limiting (via LiteLLM)
-- Real-time CloudWatch dashboards (token usage, latency, errors)
-- Self-service OIDC authentication via custom JWT middleware
-
-**Pattern 3 (Full Observability):**
-- Everything in Pattern 2, plus:
-- Long-term data lake for historical analysis (Kinesis → S3 → Athena)
-- SQL-based analytics with Glue Data Catalog
-- Foundation for productivity metrics and ROI reporting (integration guides provided)
+**LLM Gateway:**
+- Hard quota enforcement, per-user/per-team budgets, rate limiting (provided by the gateway)
+- Self-service OIDC authentication via custom JWT middleware (optional)
+- Telemetry handled by the gateway (LiteLLM, Portkey, Kong AI Gateway, Helicone, etc.)
 
 ### Choose Your Pattern
 
 ```text
 Need hard quota enforcement? (Block requests when limits hit)
 │
-├── YES → Pattern 2 or 3 (Gateway required)
-│         │
-│         └── Need ROI reporting?
-│              ├── No  → Pattern 2: Governed Gateway
-│              └── Yes → Pattern 3: Full Observability
+├── YES → LLM Gateway
 │
 └── NO → Already use AWS IAM Identity Center?
           │
-          ├── YES → Pattern 1: Native AWS Access
+          ├── YES → Native AWS Access
           │
           └── NO → Choose:
-                    Pattern 1 (set up IdC) OR Pattern 2 (gateway)
+                    Native AWS Access (set up IdC) OR LLM Gateway
 ```
 
 ### Pattern Comparison
 
-| Pattern | Setup Time | Best For |
-| ------- | ---------- | -------- |
-| **[Pattern 1: Native AWS Access](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN_IDC.md)** | 5-60 min | Teams with IdC, soft monitoring OK |
-| **[Pattern 2: Governed Gateway](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN_GATEWAY.md)** | 15 min | Hard budgets, rate limiting |
-| **[Pattern 3: Full Observability](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN_HYBRID.md)** | +30 min | ROI reporting, analytics |
+| Pattern | Setup Time | Telemetry | Best For |
+| ------- | ---------- | --------- | -------- |
+| **[Native AWS Access](guidance-for-codex-on-amazon-bedrock/docs/QUICKSTART_NATIVE_AWS_ACCESS.md)** | 5-60 min | Optional Codex-side OTel | Teams with IdC, soft monitoring OK |
+| **[LLM Gateway](guidance-for-codex-on-amazon-bedrock/docs/QUICKSTART_LLM_GATEWAY.md)** | 15 min | Provided by the gateway | Hard budgets, rate limiting |
 
 ### Quick Start
 
@@ -82,13 +70,12 @@ uv run cxwb distribute --bucket my-bucket  # Generate developer bundle
 
 **After running `cxwb init`, follow the guide for your chosen pattern:**
 
-- **Pattern 1 chosen?** → [Native AWS Access Quickstart](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN_IDC.md)
-- **Pattern 2 chosen?** → [Governed Gateway Quickstart](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN_GATEWAY.md)
-- **Pattern 3 chosen?** → [Full Observability Quickstart](guidance-for-codex-on-amazon-bedrock/QUICKSTART_PATTERN_HYBRID.md)
+- **Native AWS Access?** → [Native AWS Access Quickstart](guidance-for-codex-on-amazon-bedrock/docs/QUICKSTART_NATIVE_AWS_ACCESS.md)
+- **LLM Gateway?** → [LLM Gateway Quickstart](guidance-for-codex-on-amazon-bedrock/docs/QUICKSTART_LLM_GATEWAY.md)
 
 ### Documentation
 
-**→ [Complete Guidance Documentation](guidance-for-codex-on-amazon-bedrock/README.md)** — Overview, decision tree, pattern details
+**→ [Complete Guidance Documentation](guidance-for-codex-on-amazon-bedrock/QUICKSTART.md)** — Overview, decision tree, pattern details
 
 **Technical Documentation:**
 

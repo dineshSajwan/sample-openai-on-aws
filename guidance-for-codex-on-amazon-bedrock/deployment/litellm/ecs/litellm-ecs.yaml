@@ -10,7 +10,17 @@ Parameters:
   OtelStackName:
     Type: String
     Default: codex-test-otel-collector
-    Description: Name of the OTel collector stack (exports CollectorEndpoint)
+    Description: Name of the OTel collector stack (exports CollectorEndpoint). Ignored if EnableOtel=false.
+
+  EnableOtel:
+    Type: String
+    Default: "false"
+    AllowedValues: ["true", "false"]
+    Description: >
+      When false (default), the gateway runs without OTel env vars and does NOT import
+      ${OtelStackName}-endpoint, so the OTel collector stack does not need to exist.
+      Set to true only if you've separately deployed an OTel collector and want the
+      gateway to forward traces to it.
 
   LiteLLMMasterKey:
     Type: String
@@ -95,6 +105,7 @@ Parameters:
 
 Conditions:
   UseJwtMiddleware: !Equals [!Ref EnableJwtMiddleware, "true"]
+  OtelEnabled: !Equals [!Ref EnableOtel, "true"]
 
 Resources:
 
@@ -274,12 +285,17 @@ Resources:
           Environment:
             - Name: AWS_REGION
               Value: !Ref AwsRegion
-            - Name: OTEL_EXPORTER
-              Value: otlp_http
-            # Forward to the deployed OTel collector ALB
-            - Name: OTEL_ENDPOINT
-              Value: !ImportValue
-                Fn::Sub: "${OtelStackName}-endpoint"
+            - !If
+              - OtelEnabled
+              - Name: OTEL_EXPORTER
+                Value: otlp_http
+              - !Ref AWS::NoValue
+            - !If
+              - OtelEnabled
+              - Name: OTEL_ENDPOINT
+                Value: !ImportValue
+                  Fn::Sub: "${OtelStackName}-endpoint"
+              - !Ref AWS::NoValue
             - Name: DATABASE_URL
               Value: !Sub "postgresql://litellm:${DBPassword}@${RDSInstance.Endpoint.Address}:5432/litellm"
           Secrets:
@@ -397,6 +413,7 @@ Outputs:
       Name: !Sub "${AWS::StackName}-GatewayEndpoint"
 
   OtelEndpoint:
+    Condition: OtelEnabled
     Description: OTel collector endpoint used by this deployment
     Value: !ImportValue
       Fn::Sub: "${OtelStackName}-endpoint"

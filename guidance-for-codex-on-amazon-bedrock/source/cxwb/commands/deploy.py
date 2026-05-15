@@ -55,19 +55,6 @@ def _deploy_gateway(p: dict) -> None:
         capabilities=["CAPABILITY_IAM"],
     )
 
-    click.echo("\nDeploying OTel collector stack...")
-    net_outputs = aws.stack_outputs(region, p["networking_stack"])
-    aws.deploy_stack(
-        region=region,
-        name=p["otel_stack"],
-        template=paths.OTEL_TEMPLATE,
-        parameters={
-            "VpcId": net_outputs["VpcId"],
-            "SubnetIds": net_outputs["SubnetIds"],
-        },
-        capabilities=["CAPABILITY_IAM"],
-    )
-
     # Deploy DynamoDB table for JWT middleware (if OIDC enabled)
     if p.get("enable_oidc"):
         click.echo("\nDeploying DynamoDB table for user-key mapping...")
@@ -86,7 +73,7 @@ def _deploy_gateway(p: dict) -> None:
     # Build parameters for gateway stack
     gateway_params = {
         "NetworkingStackName": p["networking_stack"],
-        "OtelStackName": p["otel_stack"],
+        "EnableOtel": "false",
         "AwsRegion": region,
         "LiteLLMImage": p["image_uri"],
         "LiteLLMMasterKey": p["master_key"],

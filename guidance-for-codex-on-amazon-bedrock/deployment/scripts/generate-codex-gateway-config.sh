@@ -352,7 +352,7 @@ codex exec "test"           # ✗ Wrong - connects to OpenAI
 
 ## Getting Help
 
-- See QUICKSTART_PATTERN_GATEWAY.md in the main repository for detailed documentation
+- See docs/QUICKSTART_LLM_GATEWAY.md in the main repository for detailed documentation
 - Contact your platform team for API key issues
 - For gateway access issues, verify your IP is in the allowed CIDR range
 
