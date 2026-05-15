@@ -18,6 +18,8 @@ if not INFRA_DIR.is_dir():
 IDC_TEMPLATE = INFRA_DIR / "bedrock-auth-idc.yaml"
 NETWORKING_TEMPLATE = INFRA_DIR / "networking.yaml"
 OTEL_TEMPLATE = INFRA_DIR / "otel-collector.yaml"
+OTEL_DASHBOARD_TEMPLATE = INFRA_DIR / "codex-otel-dashboard.yaml"
+LITELLM_DASHBOARD_TEMPLATE = INFRA_DIR / "litellm-dashboard.yaml"
 LITELLM_TEMPLATE = LITELLM_DIR / "ecs" / "litellm-ecs.yaml"
 USER_KEY_MAPPING_TEMPLATE = LITELLM_DIR / "ecs" / "user-key-mapping.yaml"
 

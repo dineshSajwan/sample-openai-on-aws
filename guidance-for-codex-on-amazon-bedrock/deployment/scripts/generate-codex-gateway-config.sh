@@ -137,8 +137,8 @@ if grep -q "YOUR_API_KEY_HERE" "$fragment"; then
   echo ""
 fi
 
-# Strip any prior managed block, then append.
-awk '/# >>> end codex-gateway managed/{skip=0; next} /# >>> codex-gateway managed/{skip=1} !skip{print}' "$cfg" >"$cfg.tmp"
+# Strip any prior managed blocks (both codex-gateway and codex-otel), then append.
+awk '/# >>> end (codex-gateway|codex-otel) managed/{skip=0; next} /# >>> (codex-gateway|codex-otel) managed/{skip=1} !skip{print}' "$cfg" >"$cfg.tmp"
 mv "$cfg.tmp" "$cfg"
 # Ensure trailing newline so the next awk pass can match the fence on its own line.
 [[ -s "$cfg" && $(tail -c1 "$cfg") != "" ]] && printf '\n' >>"$cfg"
@@ -150,6 +150,33 @@ echo "✓ Wrote configuration to $cfg"
 if [[ -f "$HOME/.codex/auth.json" ]]; then
   mv "$HOME/.codex/auth.json" "$HOME/.codex/auth.json.backup.$(date +%s)"
   echo "✓ Backed up existing auth.json (was pointing to api.openai.com)"
+fi
+
+# Install OTEL collector if present
+if [[ -f "$here/otelcol-local" ]]; then
+  echo ""
+  echo "Installing OTEL collector..."
+  mkdir -p "$HOME/.codex/otel"
+
+  cp "$here/otelcol-local" "$HOME/.codex/otel/"
+  cp "$here/otel-config.yaml" "$HOME/.codex/otel/"
+  cp "$here/start-collector.sh" "$HOME/.codex/otel/"
+  cp "$here/stop-collector.sh" "$HOME/.codex/otel/"
+  cp "$here/collector-status.sh" "$HOME/.codex/otel/"
+
+  chmod +x "$HOME/.codex/otel/otelcol-local"
+  chmod +x "$HOME/.codex/otel"/*.sh
+
+  # Remove quarantine on macOS
+  if [[ "$OSTYPE" == "darwin"* ]]; then
+    xattr -d com.apple.quarantine "$HOME/.codex/otel/otelcol-local" 2>/dev/null || true
+  fi
+
+  echo "✓ OTEL collector installed to ~/.codex/otel/"
+
+  # Start collector
+  "$HOME/.codex/otel/start-collector.sh"
+  echo "✓ OTEL collector started"
 fi
 
 # Detect shell and add alias
@@ -179,6 +206,9 @@ echo ""
 echo "Next steps:"
 echo "  1. Reload your shell: source $SHELL_RC"
 echo "  2. Test Codex CLI: codex-gateway exec 'Say hello'"
+if [[ -f "$here/otelcol-local" ]]; then
+  echo "  3. Check OTEL: ~/.codex/otel/collector-status.sh"
+fi
 echo ""
 echo "See README.md for detailed usage and troubleshooting."
 echo "════════════════════════════════════════════════════════════"

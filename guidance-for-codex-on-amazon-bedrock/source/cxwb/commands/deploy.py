@@ -131,6 +131,21 @@ def _deploy_gateway(p: dict) -> None:
         gateway_url = outputs.get("GatewayEndpoint", "").rstrip("/v1")
         click.echo(f"  {gateway_url}/api/my-key")
 
+    # Deploy LiteLLM dashboard
+    click.echo("\nDeploying CloudWatch dashboard...")
+    dashboard_name = "LiteLLMGateway"
+    aws.deploy_stack(
+        region=region,
+        name=f"{p['gateway_stack']}-dashboard",
+        template=paths.LITELLM_DASHBOARD_TEMPLATE,
+        parameters={
+            "DashboardName": dashboard_name,
+        },
+        capabilities=[],
+    )
+    click.echo(f"\n✅ Dashboard deployed: {dashboard_name}")
+    click.echo(f"   View at: https://console.aws.amazon.com/cloudwatch/home?region={region}#dashboards:name={dashboard_name}")
+
 
 def run(profile_name: str) -> None:
     p = profile.load(profile_name)

@@ -362,6 +362,10 @@ def run(
         gateway_url = _gateway_endpoint_from_stack(p)
         base_url = gateway_url.rstrip("/v1")
 
+        # Get the correct secret name from gateway stack
+        gateway_stack = p.get("gateway_stack", "codex-litellm-gateway")
+        secret_name = f"{gateway_stack}/litellm-master-key"
+
         click.echo("\n" + "="*70)
         click.echo("📊 ADMIN ACCESS TO LITELLM DASHBOARD")
         click.echo("="*70)
@@ -369,15 +373,15 @@ def run(
         click.echo("\nTo retrieve the master key:")
         click.echo(f"  aws secretsmanager get-secret-value \\")
         click.echo(f"    --region {region} \\")
-        click.echo(f"    --secret-id codex-litellm-master-key \\")
+        click.echo(f"    --secret-id \"{secret_name}\" \\")
         click.echo(f"    --query SecretString \\")
-        click.echo(f"    --output text")
+        click.echo(f"    --output text | jq -r '.LITELLM_MASTER_KEY'")
         click.echo("\nOr copy it directly to clipboard (macOS):")
         click.echo(f"  aws secretsmanager get-secret-value \\")
         click.echo(f"    --region {region} \\")
-        click.echo(f"    --secret-id codex-litellm-master-key \\")
+        click.echo(f"    --secret-id \"{secret_name}\" \\")
         click.echo(f"    --query SecretString \\")
-        click.echo(f"    --output text | pbcopy")
+        click.echo(f"    --output text | jq -r '.LITELLM_MASTER_KEY' | pbcopy")
         click.echo("\nThen:")
         click.echo(f"  1. Open {base_url}/ui in your browser")
         click.echo(f"  2. Login with the master key (starts with 'sk-')")

@@ -274,12 +274,19 @@ Resources:
           Environment:
             - Name: AWS_REGION
               Value: !Ref AwsRegion
+            # LiteLLM OTEL configuration (standard OpenTelemetry env vars)
             - Name: OTEL_EXPORTER
               Value: otlp_http
-            # Forward to the deployed OTel collector ALB
             - Name: OTEL_ENDPOINT
-              Value: !ImportValue
-                Fn::Sub: "${OtelStackName}-endpoint"
+              Value: !Sub
+                - "${Endpoint}/v1/metrics"
+                - Endpoint: !ImportValue
+                    Fn::Sub: "${OtelStackName}-endpoint"
+            - Name: OTEL_SERVICE_NAME
+              Value: litellm-gateway
+            # Enable metrics export (required for LiteLLM OTEL integration)
+            - Name: LITELLM_OTEL_INTEGRATION_ENABLE_METRICS
+              Value: "true"
             - Name: DATABASE_URL
               Value: !Sub "postgresql://litellm:${DBPassword}@${RDSInstance.Endpoint.Address}:5432/litellm"
           Secrets:
